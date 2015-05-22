@@ -2,7 +2,7 @@
 
 namespace BellTowerEscape.Commands
 {
-    internal class MoveCommand : IGameCommand
+    public class MoveCommand : IGameCommand
     {
     }
 }

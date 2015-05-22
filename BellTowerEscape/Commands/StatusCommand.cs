@@ -1,6 +1,6 @@
 namespace BellTowerEscape.Commands
 {
-    internal class StatusCommand
+    public class StatusCommand
     {
     }
 }
