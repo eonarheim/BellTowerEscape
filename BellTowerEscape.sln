@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BellTowerEscape", "BellTowerEscape\BellTowerEscape.csproj", "{7FB52EC1-C084-469C-B53D-9C4F166A0F2E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BellTowerEscape.Tests", "..\..\Documents\Visual Studio 2013\Projects\BellTowerEscape\BellTowerEscape.Tests\BellTowerEscape.Tests.csproj", "{8C82D93F-4946-4FF3-BC12-3E6CB73DB763}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BellTowerEscape.Tests", "BellTowerEscape.Tests\BellTowerEscape.Tests.csproj", "{C5DBF9BA-A761-4FBA-BA6C-26203ABB3FA3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{7FB52EC1-C084-469C-B53D-9C4F166A0F2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FB52EC1-C084-469C-B53D-9C4F166A0F2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FB52EC1-C084-469C-B53D-9C4F166A0F2E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8C82D93F-4946-4FF3-BC12-3E6CB73DB763}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8C82D93F-4946-4FF3-BC12-3E6CB73DB763}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8C82D93F-4946-4FF3-BC12-3E6CB73DB763}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8C82D93F-4946-4FF3-BC12-3E6CB73DB763}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5DBF9BA-A761-4FBA-BA6C-26203ABB3FA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5DBF9BA-A761-4FBA-BA6C-26203ABB3FA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5DBF9BA-A761-4FBA-BA6C-26203ABB3FA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5DBF9BA-A761-4FBA-BA6C-26203ABB3FA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
