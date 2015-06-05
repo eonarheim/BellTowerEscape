@@ -53,6 +53,12 @@
     <Compile Include="GameTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BellTowerEscape\BellTowerEscape.csproj">
+      <Project>{7FB52EC1-C084-469C-B53D-9C4F166A0F2E}</Project>
+      <Name>BellTowerEscape</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

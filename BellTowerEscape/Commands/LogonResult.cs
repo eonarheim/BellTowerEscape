@@ -9,5 +9,6 @@ namespace BellTowerEscape.Commands
     {
         public string AuthToken { get; set; }
         public int GameId { get; set; }
+        public int GameStart { get; set; }
     }
 }
