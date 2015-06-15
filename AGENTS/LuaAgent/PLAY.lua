@@ -81,8 +81,8 @@ end
 
 -- initialize a client class
 local client = class()
-function client:__init(name)
-    self.url = "http://localhost"
+function client:__init(name, url)
+    self.url = url
     self.headers = {["Accept"] = "application/json", ["Content-Type"] = "application/json"}
     
     self.pendingMoves = {} -- sample { {ElevatorID = 1, Function = "left"}, {ElevatorID = 2, Function = "right"} }
@@ -256,5 +256,5 @@ function client:start()
 
 end
 
-local agent = client:new("SampleLuaAgent")
+local agent = client:new("SampleLuaAgent", "http://localhost")
 agent:start()
