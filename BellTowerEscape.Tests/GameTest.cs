@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BellTowerEscape.Commands;
 using BellTowerEscape.Server;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -76,7 +77,6 @@ namespace BellTowerEscape.Tests
             Assert.IsTrue(result.Success);
             Assert.AreEqual(elevator.Floor, 1);
 
-
         }
 
         [TestMethod]
@@ -100,38 +100,122 @@ namespace BellTowerEscape.Tests
             game.Elevators.TryGetValue(0, out elevator);
             Assert.AreEqual(elevator.Floor, 1);
 
-            // should fail on the second attempt and not advance the elevator
-            result = game.MoveElevator(command);
-            Assert.IsFalse(result.Success);
-            Assert.AreEqual(elevator.Floor, 1);
-
-            // should work on the other elevator
-            game.Elevators.TryGetValue(1, out elevator);
-            command.ElevatorId = 1;
-            result = game.MoveElevator(command);
-            Assert.IsTrue(result.Success);
-            Assert.AreEqual(elevator.Floor, 1);
-
         }
 
         [TestMethod]
         public void PlayerCanIssueMoveDownCommand()
         {
-            
+            var game = new Game();
+
+            var logonResult = game.LogonPlayer("MyCoolAgent");
+
+            var command = new MoveCommand()
+            {
+                AuthToken = logonResult.AuthToken,
+                Direction = "Up",
+                ElevatorId = 0
+            };
+
+            var result = game.MoveElevator(command);
+            Assert.IsTrue(result.Success);
+
+            Elevator elevator;
+            game.Elevators.TryGetValue(0, out elevator);
+            Assert.AreEqual(elevator.Floor, 1);
+
+            game.Update(Game.TURN_DURATION);
+            game.Update(Game.SERVER_PROCESSING);
+            command.Direction = "Down";
+
+            result = game.MoveElevator(command);
+            Assert.IsTrue(result.Success);
+            game.Elevators.TryGetValue(0, out elevator);
+            Assert.AreEqual(elevator.Floor, 0);
+
         }
 
         [TestMethod]
-        public void PlayersCanLoadUnloadElevators()
+        public void PlayersCanLoadElevatorsFairly()
         {
+            var game = new Game();
+
+            var logonResult = game.LogonPlayer("MyCoolAgent");
+
+            var command = new MoveCommand()
+            {
+                AuthToken = logonResult.AuthToken,
+                Direction = "stop",
+                ElevatorId = 0
+            };
+
             
+            game.Elevators[0].Floor = 0;
+            game.Elevators[1].Floor = 0;
+            var e0 = game.Elevators[0];
+            var e1 = game.Elevators[1];
+            e0.Meeples.Add(new Meeple(game, game.Floors[0]));
+            e0.Meeples.Add(new Meeple(game, game.Floors[0]));
+
+            game.Elevators[2].Floor = 2;
+            game.Elevators[3].Floor = 2;
+
+            var meeples = new List<Meeple>()
+            {
+                new Meeple(game, game.Floors[0]){Destination = 10},
+                new Meeple(game, game.Floors[0]){Destination = 7}
+            };
+            game.Floors[0].Meeples = meeples;
+            
+            
+
+            var result = game.MoveElevator(command);
+            command.ElevatorId = 1;
+            game.MoveElevator(command);
+
+            foreach (var meeple in meeples)
+            {
+                Assert.IsFalse(meeple.InElevator);
+            }
+
+            game.Update(Game.TURN_DURATION);
+            game.Update(Game.SERVER_PROCESSING);
+
+            Assert.AreEqual(game.Floors[0].Number, 0);
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(e0.IsStopped, true);
+            Assert.AreEqual(e0.Floor, 0);
+            Assert.AreEqual(e0.Meeples.Count, 2);
+
+            Assert.AreEqual(e1.IsStopped, true);
+            Assert.AreEqual(e1.Floor, 0);
+            Assert.AreEqual(e1.Meeples.Count, 2);
+            foreach (var meeple in e1.Meeples)
+            {
+                Assert.IsTrue(meeple.InElevator);
+            }
+            
+            Assert.AreEqual(game.Floors[0].Meeples.Count, 0);
         }
 
         [TestMethod]
-        public void PeoplePreferEmptierElevators()
+        public void PlayersCantMoveElevatorsTheyDontOwn()
         {
-            
-        }
+            var game = new Game();
 
+            var logonResult = game.LogonPlayer("MyCoolAgent");
+
+            var command = new MoveCommand()
+            {
+                AuthToken = logonResult.AuthToken,
+                Direction = "up",
+                ElevatorId = 2
+            };
+
+            var result = game.MoveElevator(command);
+            Assert.IsFalse(result.Success);
+
+        }
+        
         [TestMethod]
         public void PeopleWillBeFrustratedAfterXFloors()
         {

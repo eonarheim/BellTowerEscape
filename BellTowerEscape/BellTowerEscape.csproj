@@ -236,6 +236,7 @@
     <Compile Include="Server\MeepleLite.cs" />
     <Compile Include="Server\Player.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Utility\ListExtensions.cs" />
     <Compile Include="Utility\MappingExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

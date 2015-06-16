@@ -6,6 +6,7 @@ using System.Timers;
 using System.Web;
 using AutoMapper;
 using BellTowerEscape.Commands;
+using BellTowerEscape.Utility;
 
 namespace BellTowerEscape.Server
 {
@@ -18,7 +19,7 @@ namespace BellTowerEscape.Server
         public static int MAX_TURN = 500;
 
         private static int _NUMBER_OF_ELEVATORS = 4;
-        private static int _NUMBER_OF_FLOORS = 12;
+        public static int NUMBER_OF_FLOORS = 12;
 
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
@@ -60,6 +61,10 @@ namespace BellTowerEscape.Server
 
         public Game()
         {
+            if (Random == null)
+            {
+                Random = new Random();
+            }
             if (Id < 0)
             {
                 Id = _MAXID++;
@@ -70,7 +75,7 @@ namespace BellTowerEscape.Server
                 Elevators.GetOrAdd(i, new Elevator(){Floor = 0, Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
-            for (int i = 0; i < _NUMBER_OF_FLOORS; i++)
+            for (int i = 0; i < NUMBER_OF_FLOORS; i++)
             {
                 Floors.GetOrAdd(i, new Floor() {Meeples = new List<Meeple>(), Number = i});
             }
@@ -100,7 +105,8 @@ namespace BellTowerEscape.Server
 
                 if (success && success2)
                 {
-                    System.Diagnostics.Debug.WriteLine("Player logon [{0}]:[{1}]", newPlayer.PlayerName, newPlayer.AuthToken);    
+                    System.Diagnostics.Debug.WriteLine("Player logon [{0}]:[{1}]", newPlayer.PlayerName,
+                        newPlayer.AuthToken);
                 }
 
                 _allocateElevators(newPlayer.AuthToken);
@@ -108,8 +114,12 @@ namespace BellTowerEscape.Server
                 result.GameId = Id;
                 result.GameStart = START_DELAY;
             }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Player {0} already logged on!", playerName);
+            }
             result.GameId = Id;
-            System.Diagnostics.Debug.WriteLine("Player {0} already logged on!", playerName);
+            
             return result;
         }
 
@@ -161,11 +171,11 @@ namespace BellTowerEscape.Server
         public MoveResult MoveElevator(MoveCommand command)
         {
             var result = new MoveResult();
-            var token = command.AuthToken;
+            //var token = command.AuthToken;
             var id = command.ElevatorId;
             Elevator elevator;
             var exists = Elevators.TryGetValue(id, out elevator);
-
+            
             var error = _validateMoveElevatorErrors(command);
 
             if (error == null && elevator != null)
@@ -174,19 +184,19 @@ namespace BellTowerEscape.Server
                 // we have validated control and existance of the elevator
                 if (command.Direction.ToLower() == "up")
                 {
-                    elevator.Floor = Math.Min(elevator.Floor + 1, _NUMBER_OF_FLOORS);
-                    elevator.IsMoving = true;
+                    elevator.Floor = Math.Min(elevator.Floor + 1, NUMBER_OF_FLOORS);
+                    elevator.IsStopped = false;
                     result.Message = string.Format("Moved elevator {0} up successfully", command.ElevatorId);
                 }
                 else if (command.Direction.ToLower() == "down")
                 {
                     elevator.Floor = Math.Max(elevator.Floor - 1, 0);
-                    elevator.IsMoving = true;
+                    elevator.IsStopped = false;
                     result.Message = string.Format("Moved elevator {0} down successfully", command.ElevatorId);
                 }
                 else if (command.Direction.ToLower() == "stop")
                 {
-                    elevator.IsMoving = false;
+                    elevator.IsStopped = true;
                     result.Message = string.Format("Stopped elevator {0} successfully", command.ElevatorId);
                 }
                 result.Success = true;
@@ -237,6 +247,15 @@ namespace BellTowerEscape.Server
                 };
             }
 
+            if (elevator.PlayerToken != token)
+            {
+                return new MoveResult()
+                {
+                    Success = false,
+                    Message = string.Format("Can't move elevators you don't own ;) ID: {0}", command.ElevatorId)
+                };
+            }
+
             if (elevator.Done)
             {
                 return new MoveResult()
@@ -276,16 +295,72 @@ namespace BellTowerEscape.Server
                 Processing = false;
                 this.elapsedTotalTurn = 0;
                 Turn++;
+                // publish viz update every turn
+                // todo publish viz update
             }
 
             if (Processing && !_processingComplete)
             {
                 // for each floor move people to stopped elevators
+                for (var i = 0; i < Floors.Count; i++)
+                {
+                    var meepleOnFloor = Floors[i].Meeples.Count;
+                    var elevatorsStoppedOnFloor = Elevators.Values.Where(e => e.IsStopped && e.Floor == i).OrderByDescending(e => e.FreeSpace).ToList();
+
+                    foreach (var group in elevatorsStoppedOnFloor.GroupBy(e => e.FreeSpace, e => e))
+                    {
+                        while (meepleOnFloor > 0 && elevatorsStoppedOnFloor.Any(e => e.FreeSpace > 0))
+                        {
+                            var free = group.Key;
+                            var elevators = group.ToList();
+                            elevators.Shuffle(this);
+
+                            foreach (var elevator in elevators)
+                            {
+                                var meeple = Floors[i].Meeples.FirstOrDefault();
+                                if (meeple != null)
+                                {
+                                    Floors[i].Meeples.Remove(meeple);
+                                    elevator.Meeples.Add(meeple);
+                                    meeple.InElevator = true;
+
+                                }
+                            }
+                            meepleOnFloor = Floors[i].Meeples.Count;
+                        }
+                        
+                    }
+                }
+
                 // for each elevator check Meeple frustration
+                foreach (var elevator in Elevators.Values)
+                {
+                    foreach (var meeple in elevator.Meeples)
+                    {
+                        meeple.Update();
+                    }
+                }
+
                 // score meeples
+                foreach (var elevator in Elevators.Values)
+                {
+                    foreach (var meeple in elevator.Meeples)
+                    {
+                        if (elevator.Floor == meeple.Destination && !elevator.IsStopped)
+                        {
+                            elevator.Meeples.Remove(meeple);
+                            _authTokens[elevator.PlayerToken].Score++;
+                        }
+                    }
+                }
 
 
                 // clear state variables
+                foreach (var elevator in Elevators.Values)
+                {
+                    elevator.Done = false;
+                }
+
                 _processingComplete = true;
             }
 
@@ -294,7 +369,7 @@ namespace BellTowerEscape.Server
                 this.GameOver = true;
             }
 
-            // publish viz update
+            
         }
 
         
