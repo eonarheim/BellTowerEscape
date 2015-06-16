@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using System.Web;
+using AutoMapper;
 using BellTowerEscape.Commands;
 
 namespace BellTowerEscape.Server
@@ -11,9 +12,10 @@ namespace BellTowerEscape.Server
     public class Game
     {
         private static int _MAXID = -1;
-        private static int _START_DELAY = 5000; // 5 seconds
-        private static int _TURN_DURATION = 2000; // 2 seconds
-        private static int _SERVER_PROCESSING = 2000; // 2 seconds
+        public static int START_DELAY = 5000; // 5 seconds
+        public static int TURN_DURATION = 2000; // 2 seconds
+        public static int SERVER_PROCESSING = 2000; // 2 seconds
+        public static int MAX_TURN = 500;
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         private static int _NUMBER_OF_FLOORS = 12;
@@ -21,20 +23,27 @@ namespace BellTowerEscape.Server
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
         private ConcurrentDictionary<string, Player> _authTokens = new ConcurrentDictionary<string, Player>(); 
+        
 
         public int Seed { get; set; }
         public Random Random { get; set; }
         public int Id { get; set; }
         public bool Processing { get; set; }
+        public int Turn { get; set; }
+        public bool GameOver { get; set; }
+
+        public bool _processingComplete { get; set; }
 
         private object synclock = new object();
 
-        private long elapsedPlayerTime = 0;
+        private long elapsedTotalTurn = 0;
         private long elapsedServerTime = 0;
 
 
         public ConcurrentDictionary<int, Elevator> Elevators { get; set;}
+        public ConcurrentDictionary<int, Floor> Floors { get; set; } 
         
+
 
         public Game(int? seed, int? id) : base()
         {
@@ -60,6 +69,13 @@ namespace BellTowerEscape.Server
             {
                 Elevators.GetOrAdd(i, new Elevator(){Floor = 0, Meeples = new List<Meeple>()});
             }
+            Floors = new ConcurrentDictionary<int, Floor>();
+            for (int i = 0; i < _NUMBER_OF_FLOORS; i++)
+            {
+                Floors.GetOrAdd(i, new Floor() {Meeples = new List<Meeple>(), Number = i});
+            }
+
+            Turn = 0;
             _gameLoop = new HighFrequencyTimer(60, this.Update);
         }
 
@@ -80,8 +96,9 @@ namespace BellTowerEscape.Server
                 };
 
                 var success = _players.TryAdd(playerName, newPlayer);
+                var success2 = _authTokens.TryAdd(newPlayer.AuthToken, newPlayer);
 
-                if (success)
+                if (success && success2)
                 {
                     System.Diagnostics.Debug.WriteLine("Player logon [{0}]:[{1}]", newPlayer.PlayerName, newPlayer.AuthToken);    
                 }
@@ -89,12 +106,22 @@ namespace BellTowerEscape.Server
                 _allocateElevators(newPlayer.AuthToken);
                 result.AuthToken = newPlayer.AuthToken;
                 result.GameId = Id;
-                result.GameStart = _START_DELAY;
+                result.GameStart = START_DELAY;
             }
             result.GameId = Id;
             System.Diagnostics.Debug.WriteLine("Player {0} already logged on!", playerName);
             return result;
         }
+
+        public List<ElevatorLite> GetElevatorsForPlayer(string token)
+        {
+            return this.Elevators.Values.Where(e => e.PlayerToken == token).Select(Mapper.Map<ElevatorLite>).ToList();
+        }
+
+        public List<ElevatorLite> GetElevatorsForOtherPlayer(string token)
+        {
+            return this.Elevators.Values.Where(e => e.PlayerToken != token).Select(Mapper.Map<ElevatorLite>).ToList();
+        } 
 
         private void _allocateElevators(string token)
         {
@@ -112,6 +139,24 @@ namespace BellTowerEscape.Server
                 }
             }
         }
+
+        public StatusResult GetStatus(StatusCommand command)
+        {
+
+            return new StatusResult()
+            {
+                EnemyElevators = GetElevatorsForPlayer(command.AuthToken),
+                MyElevators = GetElevatorsForPlayer(command.AuthToken),
+                TimeUntilNextTurn =
+                    (int) (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime),
+                Delivered = _players[command.AuthToken].Score,
+                Floors = Floors.Values.Select(Mapper.Map<FloorLite>).ToList(),
+                Id = this.Id,
+                Turn = this.Turn
+            };
+        }
+
+        
 
         public MoveResult MoveElevator(MoveCommand command)
         {
@@ -215,29 +260,44 @@ namespace BellTowerEscape.Server
 
         public void Update(long delta)
         {
-            if (!Processing && (this.elapsedPlayerTime += delta) >= _TURN_DURATION)
+            if (GameOver)
+            {
+                return;
+            }
+
+            this.elapsedTotalTurn += delta;
+            if (!Processing && this.elapsedTotalTurn >= TURN_DURATION)
             {
                 Processing = true;
-                this.elapsedPlayerTime = 0;
             }
 
-            if (Processing && (this.elapsedServerTime += delta) >= _SERVER_PROCESSING)
+            if (this.elapsedTotalTurn>= SERVER_PROCESSING + TURN_DURATION)
             {
                 Processing = false;
-                this.elapsedServerTime = 0;
+                this.elapsedTotalTurn = 0;
+                Turn++;
             }
 
-            if (Processing)
+            if (Processing && !_processingComplete)
             {
                 // for each floor move people to stopped elevators
                 // for each elevator check Meeple frustration
+                // score meeples
 
 
                 // clear state variables
+                _processingComplete = true;
             }
-            
+
+            if (Turn >= MAX_TURN)
+            {
+                this.GameOver = true;
+            }
+
             // publish viz update
         }
+
+        
 
         public void Start()
         {

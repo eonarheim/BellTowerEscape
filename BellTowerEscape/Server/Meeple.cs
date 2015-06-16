@@ -10,6 +10,6 @@ namespace BellTowerEscape.Server
         public int Id { get; set; }
         public bool InElevator { get; set; }
         public int Destination { get; set; }
-        public int Frustration { get; set; }
+        public int Patience { get; set; }
     }
 }
