@@ -162,7 +162,7 @@ namespace BellTowerEscape.Server
         {
             var result = new MoveResult();
             var token = command.AuthToken;
-            var id = command.Id;
+            var id = command.ElevatorId;
             Elevator elevator;
             var exists = Elevators.TryGetValue(id, out elevator);
 
@@ -176,18 +176,18 @@ namespace BellTowerEscape.Server
                 {
                     elevator.Floor = Math.Min(elevator.Floor + 1, _NUMBER_OF_FLOORS);
                     elevator.IsMoving = true;
-                    result.Message = string.Format("Moved elevator {0} up successfully", command.Id);
+                    result.Message = string.Format("Moved elevator {0} up successfully", command.ElevatorId);
                 }
                 else if (command.Direction.ToLower() == "down")
                 {
                     elevator.Floor = Math.Max(elevator.Floor - 1, 0);
                     elevator.IsMoving = true;
-                    result.Message = string.Format("Moved elevator {0} down successfully", command.Id);
+                    result.Message = string.Format("Moved elevator {0} down successfully", command.ElevatorId);
                 }
                 else if (command.Direction.ToLower() == "stop")
                 {
                     elevator.IsMoving = false;
-                    result.Message = string.Format("Stopped elevator {0} successfully", command.Id);
+                    result.Message = string.Format("Stopped elevator {0} successfully", command.ElevatorId);
                 }
                 result.Success = true;
             }
@@ -204,7 +204,7 @@ namespace BellTowerEscape.Server
         private MoveResult _validateMoveElevatorErrors(MoveCommand command)
         {
             var token = command.AuthToken;
-            var id = command.Id;
+            var id = command.ElevatorId;
             Elevator elevator;
             var exists = Elevators.TryGetValue(id, out elevator);
 

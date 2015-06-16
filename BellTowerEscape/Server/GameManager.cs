@@ -9,6 +9,7 @@ namespace BellTowerEscape.Server
     public class GameManager
     {
         private static readonly GameManager _instance = new GameManager();
+        public Dictionary<int, Game> Games { get; set; } 
 
         public static GameManager Instance
         {
@@ -17,34 +18,40 @@ namespace BellTowerEscape.Server
 
         private GameManager()
         {
-            
+            Games = new Dictionary<int, Game>();
+        }
+
+        public Game GetNewGame()
+        {
+            var game = new Game();
+            Games.Add(game.Id, game);
+            game.Start();
+            return game;
         }
         
-
-        /*public IResult Execute<T>(T command) where T : IGameCommand
-        {
-            var type = typeof (T);
-            var method = type.Name.Replace("Command", string.Empty);
-            var me = this.GetType();
-
-            // TODO record commands with timing info for replays!
-
-            return (IResult) me.GetMethod(method).Invoke(Instance, new object[]{ command });
-        }*/
 
         [ValidateAuthToken]
         [RecordCommand]
         public MoveResult Execute(MoveCommand command)
         {
+            
             // TODO Validate Command authToken
+            var game = Games[command.GameId];
+            
             // TODO Execute command against game
+            var result = game.MoveElevator(command);
+
             // TODO Return result
-            return new MoveResult();
+            return result;
         }
         [RecordCommand]
         public LogonResult Execute(LogonCommand command)
         {
-            return new LogonResult();   
+            var game = GetNewGame();
+
+            var result = game.LogonPlayer(command.AgentName);
+
+            return result;
         }
 
         public KillResult Execute(KillCommand command)
@@ -55,7 +62,10 @@ namespace BellTowerEscape.Server
         [ValidateAuthToken]
         public StatusResult Execute(StatusCommand command)
         {
-            return new StatusResult();
+            var game = Games[command.GameId];
+
+            var result = game.GetStatus(command);
+            return result;
         }
     }
 

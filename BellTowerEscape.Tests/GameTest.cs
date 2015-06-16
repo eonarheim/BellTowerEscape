@@ -54,7 +54,7 @@ namespace BellTowerEscape.Tests
             {
                 AuthToken = logonResult.AuthToken,
                 Direction = "UP",
-                Id = 0
+                ElevatorId = 0
             };
 
             var result = game.MoveElevator(command);
@@ -71,7 +71,7 @@ namespace BellTowerEscape.Tests
 
             // should work on the other elevator
             game.Elevators.TryGetValue(1, out elevator);
-            command.Id = 1;
+            command.ElevatorId = 1;
             result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
             Assert.AreEqual(elevator.Floor, 1);
@@ -90,7 +90,7 @@ namespace BellTowerEscape.Tests
             {
                 AuthToken = logonResult.AuthToken,
                 Direction = "UP",
-                Id = 0
+                ElevatorId = 0
             };
 
             var result = game.MoveElevator(command);
@@ -107,7 +107,7 @@ namespace BellTowerEscape.Tests
 
             // should work on the other elevator
             game.Elevators.TryGetValue(1, out elevator);
-            command.Id = 1;
+            command.ElevatorId = 1;
             result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
             Assert.AreEqual(elevator.Floor, 1);
@@ -155,7 +155,7 @@ namespace BellTowerEscape.Tests
             {
                 AuthToken = logonResult.AuthToken,
                 Direction = "UP",
-                Id = 0
+                ElevatorId = 0
             };
 
             var result = game.MoveElevator(command);
