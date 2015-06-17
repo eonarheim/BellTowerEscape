@@ -11,6 +11,8 @@ namespace BellTowerEscape.Commands
         public List<ElevatorLite> MyElevators { get; set; } 
         public List<ElevatorLite> EnemyElevators { get; set; }
         public List<FloorLite> Floors { get; set; }
+        public bool IsGameOver { get; set; }
+        public string Status { get; set; }
         public int TimeUntilNextTurn { get; set; }
     }
 }

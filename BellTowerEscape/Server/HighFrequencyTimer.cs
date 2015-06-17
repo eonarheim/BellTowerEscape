@@ -135,7 +135,7 @@ namespace BellTowerEscape.Server
                     // Time to call the callback!
                     actualFps++;
                     Interlocked.Increment(ref _frameId);
-                    _callback(sw.ElapsedMilliseconds);
+                    _callback(sw.ElapsedMilliseconds - lastMs);
                     lastMs = sw.ElapsedMilliseconds;
                 }
                 else

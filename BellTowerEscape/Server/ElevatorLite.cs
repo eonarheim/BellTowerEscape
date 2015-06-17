@@ -7,6 +7,7 @@ namespace BellTowerEscape.Server
 {
     public class ElevatorLite
     {
+        public int Id { get; set; }
         public string Owner { get; set; }
         public int CurrentFloor { get; set; }
         public List<MeepleLite> Meeples { get; set; }

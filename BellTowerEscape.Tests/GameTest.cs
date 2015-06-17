@@ -116,6 +116,8 @@ namespace BellTowerEscape.Tests
                 ElevatorId = 0
             };
 
+            game.Update(Game.START_DELAY);
+
             var result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
 
@@ -148,6 +150,7 @@ namespace BellTowerEscape.Tests
                 ElevatorId = 0
             };
 
+            game.Update(Game.START_DELAY);
             
             game.Elevators[0].Floor = 0;
             game.Elevators[1].Floor = 0;
@@ -255,6 +258,7 @@ namespace BellTowerEscape.Tests
         public void TurnsAdvanceAfterTime()
         {
             var game = new Game();
+            game.Update(Game.START_DELAY);
             Assert.AreEqual(game.Turn, 0);
             game.Update(Game.TURN_DURATION);
             game.Update(Game.SERVER_PROCESSING);
@@ -270,6 +274,7 @@ namespace BellTowerEscape.Tests
         public void GameEndsAfterMaxTurns()
         {
             var game = new Game();
+            game.Update(Game.START_DELAY);
             Assert.AreEqual(game.Turn, 0);
             for (var i = 0; i < Game.MAX_TURN; i++)
             {

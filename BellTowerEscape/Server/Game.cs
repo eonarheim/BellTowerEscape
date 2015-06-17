@@ -12,7 +12,7 @@ namespace BellTowerEscape.Server
 {
     public class Game
     {
-        private static int _MAXID = -1;
+        private static int _MAXID = 0;
         public static int START_DELAY = 5000; // 5 seconds
         public static int TURN_DURATION = 2000; // 2 seconds
         public static int SERVER_PROCESSING = 2000; // 2 seconds
@@ -32,6 +32,7 @@ namespace BellTowerEscape.Server
         public bool Processing { get; set; }
         public int Turn { get; set; }
         public bool GameOver { get; set; }
+        private bool _started { get; set; }
 
         public bool _processingComplete { get; set; }
 
@@ -39,6 +40,7 @@ namespace BellTowerEscape.Server
 
         private long elapsedTotalTurn = 0;
         private long elapsedServerTime = 0;
+        private long gameStartCountdown = START_DELAY;
 
 
         public ConcurrentDictionary<int, Elevator> Elevators { get; set;}
@@ -65,14 +67,13 @@ namespace BellTowerEscape.Server
             {
                 Random = new Random();
             }
-            if (Id < 0)
-            {
-                Id = _MAXID++;
-            }
+            
+            Id = _MAXID++;
+            
             Elevators = new ConcurrentDictionary<int, Elevator>();
             for (int i = 0; i < _NUMBER_OF_ELEVATORS; i++)
             {
-                Elevators.GetOrAdd(i, new Elevator(){Floor = 0, Meeples = new List<Meeple>()});
+                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = 0, Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
             for (int i = 0; i < NUMBER_OF_FLOORS; i++)
@@ -82,6 +83,7 @@ namespace BellTowerEscape.Server
 
             Turn = 0;
             Running = false;
+            _started = false;
             _gameLoop = new HighFrequencyTimer(60, this.Update);
         }
 
@@ -113,7 +115,7 @@ namespace BellTowerEscape.Server
                 _allocateElevators(newPlayer.AuthToken);
                 result.AuthToken = newPlayer.AuthToken;
                 result.GameId = Id;
-                result.GameStart = START_DELAY;
+                result.GameStart = (int) this.gameStartCountdown;
             }
             else
             {
@@ -153,17 +155,36 @@ namespace BellTowerEscape.Server
 
         public StatusResult GetStatus(StatusCommand command)
         {
+            var status = "Initializing";
+
+            if (this.GameOver)
+            {
+                status = "Game Over";
+            }
+
+            if (this.Running)
+            {
+                status = "Game Running";
+            }
+
+            if (!this._started)
+            {
+                status = "Game waiting for Logons";
+            }
+
 
             return new StatusResult()
             {
                 EnemyElevators = GetElevatorsForPlayer(command.AuthToken),
                 MyElevators = GetElevatorsForPlayer(command.AuthToken),
-                TimeUntilNextTurn =
-                    (int) (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime),
-                Delivered = _players[command.AuthToken].Score,
+                TimeUntilNextTurn = (int) (_started ?  
+                    (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime) : this.gameStartCountdown),
+                Delivered = _authTokens[command.AuthToken].Score,
                 Floors = Floors.Values.Select(Mapper.Map<FloorLite>).ToList(),
                 Id = this.Id,
-                Turn = this.Turn
+                Turn = this.Turn,
+                IsGameOver = this.GameOver,
+                Status = status
             };
         }
 
@@ -280,6 +301,17 @@ namespace BellTowerEscape.Server
 
         public void Update(long delta)
         {
+            if (!_started)
+            {
+                this.gameStartCountdown -= delta;
+                if (this.gameStartCountdown <= 0)
+                {
+                    _started = true;
+                }
+
+                return;
+            }
+
             if (GameOver)
             {
                 return;
@@ -291,13 +323,13 @@ namespace BellTowerEscape.Server
                 Processing = true;
             }
 
-            if (this.elapsedTotalTurn>= SERVER_PROCESSING + TURN_DURATION)
+            if (this.elapsedTotalTurn >= SERVER_PROCESSING + TURN_DURATION)
             {
                 Processing = false;
                 this.elapsedTotalTurn = 0;
                 Turn++;
                 // publish viz update every turn
-                // todo publish viz update
+                ClientManager.UpdateClientGame(this);
             }
 
             if (Processing && !_processingComplete)
@@ -339,6 +371,11 @@ namespace BellTowerEscape.Server
                     foreach (var meeple in elevator.Meeples)
                     {
                         meeple.Update();
+                        if (meeple.Patience < 0)
+                        {
+                            // todo get off 
+                        }
+
                     }
                 }
 

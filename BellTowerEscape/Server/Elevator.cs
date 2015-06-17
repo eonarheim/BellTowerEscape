@@ -12,6 +12,7 @@ namespace BellTowerEscape.Server
             Meeples = new List<Meeple>();
             IsStopped = false;
         }
+        public int Id { get; set; }
         public static int Capacity = 5;
         public string PlayerToken { get; set; }
         public int Floor { get; set; }

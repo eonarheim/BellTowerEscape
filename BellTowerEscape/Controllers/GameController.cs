@@ -57,25 +57,25 @@ namespace BellTowerEscape.Controllers
         }
 
         [HttpPost]
-        [Route("api/game/{id}/status/{authToken}")]
-        public StatusResult Status(StatusCommand status, int id, string authToken)
+        [Route("api/game/status")]
+        public StatusResult Status(StatusCommand status)
         {
-            if (ISValidStatusRequest(status))
+            if (IsValidStatusRequest(status))
             {
                 return _gameManager.Execute(status);
             }
             return null;
         }
 
-        private bool ISValidStatusRequest(StatusCommand status)
+        private bool IsValidStatusRequest(StatusCommand status)
         {
-            throw new NotImplementedException();
+            return status != null;
         }
 
 
         private bool IsValidMoveRequest(MoveCommand move)
         {
-            throw new NotImplementedException();
+            return move != null;
         }
 
         private bool IsValidLogonRequest(LogonCommand logon)
