@@ -42,8 +42,8 @@ namespace BellTowerEscape.Server
 
 
         public ConcurrentDictionary<int, Elevator> Elevators { get; set;}
-        public ConcurrentDictionary<int, Floor> Floors { get; set; } 
-        
+        public ConcurrentDictionary<int, Floor> Floors { get; set; }
+        public bool Running { get; set; }
 
 
         public Game(int? seed, int? id) : base()
@@ -81,6 +81,7 @@ namespace BellTowerEscape.Server
             }
 
             Turn = 0;
+            Running = false;
             _gameLoop = new HighFrequencyTimer(60, this.Update);
         }
 
@@ -376,11 +377,13 @@ namespace BellTowerEscape.Server
 
         public void Start()
         {
+            Running = true;
             _gameLoop.Start();
         }
 
         public void Stop()
         {
+            Running = false;
             _gameLoop.Stop();
         }
 

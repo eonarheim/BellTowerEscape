@@ -19,6 +19,17 @@ namespace BellTowerEscape.Controllers
         }
 
         /// <summary>
+        /// Gets the list of current games
+        /// </summary>
+        /// <returns></returns>
+        [Route("api/game")]
+        public IList<Game> Get()
+        {
+
+            return _gameManager.Games.Values.Where(g => g.Running).ToList();
+        }
+
+        /// <summary>
         /// Initiates an agent logon with the simulation server by name. Once an agent is logged on, 
         /// a logon result is returned with the id and starting time of the next game.
         /// </summary>

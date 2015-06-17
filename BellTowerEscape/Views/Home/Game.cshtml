@@ -1,0 +1,51 @@
+﻿@model int
+@{
+    ViewBag.Title = "Game";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Game @Model <small>Turn <span id="turn"></span></small></h2>
+<div class="row">
+
+    <div class="col-md-2">
+
+        <ul id="players"></ul>
+        <div id="kill" class="btn btn-danger">Kill Game</div>
+        <dl>
+            <dt>Status</dt>
+            <dd id="status">Unknown</dd>
+        </dl>
+    </div>
+    <div class="col-md-10">
+
+        <table id="board"></table>
+    </div>
+</div>
+@section scripts {
+    <script src="/Scripts/jquery.signalR-2.1.2.min.js"></script>
+    <script src="@Url.Content("~/signalr/hubs")"></script>
+    <script type="text/javascript">
+
+        var elevatorHub = $.connection.elevatorHub;
+        var initialized = false;
+        var gameId = @Model;
+
+        $("#kill").on('click', function() {
+            $.post("@Url.Action("KillGame","Home")", {id: gameId});
+        });
+
+        elevatorHub.client.update = function(game) {
+            console.log("Received game update", game);
+            // todo update game visualization
+        };
+
+        $.connection.hub.start().done(function() {
+            console.log("Connected to ElevatorHub");
+
+            // subscribe to game updates
+            elevatorHub.server.listen(@Model);
+
+            console.log("Listening to game", @Model);
+        });
+
+    </script>
+}
