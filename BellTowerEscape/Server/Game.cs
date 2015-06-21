@@ -350,6 +350,20 @@ namespace BellTowerEscape.Server
 
             if (Processing && !_processingComplete)
             {
+
+                // score meeples
+                foreach (var elevator in Elevators.Values.ToList())
+                {
+                    foreach (var meeple in elevator.Meeples.ToList())
+                    {
+                        if (elevator.Floor == meeple.Destination && elevator.IsStopped)
+                        {
+                            elevator.Meeples.Remove(meeple);
+                            _authTokens[elevator.PlayerToken].Score++;
+                        }
+                    }
+                }
+
                 // for each floor move people to stopped elevators
                 for (var i = 0; i < Floors.Count; i++)
                 {
@@ -392,19 +406,6 @@ namespace BellTowerEscape.Server
                             // todo get off 
                         }
 
-                    }
-                }
-
-                // score meeples
-                foreach (var elevator in Elevators.Values.ToList())
-                {
-                    foreach (var meeple in elevator.Meeples.ToList())
-                    {
-                        if (elevator.Floor == meeple.Destination && elevator.IsStopped)
-                        {
-                            elevator.Meeples.Remove(meeple);
-                            _authTokens[elevator.PlayerToken].Score++;
-                        }
                     }
                 }
 
