@@ -164,8 +164,23 @@ function client:updateBanks(gameState)
             
             -- go through every person and see if they want to get off here
             for i, person in ipairs(elevator.Meeples) do
-                if currentFloor == person.DesiredFloor then
+                if currentFloor == person.Destination then
                     DropOff = true
+                end
+            end
+
+            -- ONE LAST THING. Figure out if we should swap this elevator's directions
+            if not DropOff then
+                if self.bank.elevators[currentId].Function == "MoveUp" then
+                    if currentFloor >= maxFloor then
+                        self.bank.elevators[currentId].Function = "MoveDown"
+                    end
+                elseif self.bank.elevators[currentId].Function == "MoveDown" then
+                    if currentFloor <= minFloor then
+                        self.bank.elevators[currentId].Function = "MoveUp"
+                    end
+                else
+                    error("uhhhhhh. This elevator doesn't have a Functions?! WHAT YOU DO?!?!?!")
                 end
             end
 
@@ -183,24 +198,9 @@ function client:updateBanks(gameState)
                 end
             end
 
-            -- ONE LAST THING. Figure out if we should swap this elevator's directions
-            if not (PickUp or DropOff) then
-                if self.bank.elevators[currentId].Function == "MoveUp" then
-                    if currentFloor >= maxFloor then
-                        self.bank.elevators[currentId].Function = "MoveDown"
-                    end
-                elseif self.bank.elevators[currentId].Function == "MoveDown" then
-                    if currentFloor <= minFloor then
-                        self.bank.elevators[currentId].Function = "MoveUp"
-                    end
-                else
-                    error("uhhhhhh. This elevator doesn't have a Functions?! WHAT YOU DO?!?!?!")
-                end
-            end
-
             if DropOff then 
                 self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "stop"}
-            if PickUp and elevator.FreeSpace > 0 then
+            elseif PickUp and elevator.FreeSpace > 0 then
                 self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "stop"}
             else
 
