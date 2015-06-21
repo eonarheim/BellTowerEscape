@@ -343,13 +343,12 @@ namespace BellTowerEscape.Server
                 _processingComplete = false;
                 this.elapsedTotalTurn = 0;
                 Turn++;
-                // add new Meeples
-                AddMeepleToFloors();
+
                 // publish viz update every turn
                 ClientManager.UpdateClientGame(this);
             }
 
-            if (Processing)
+            if (Processing && !_processingComplete)
             {
                 // for each floor move people to stopped elevators
                 for (var i = 0; i < Floors.Count; i++)
@@ -408,6 +407,9 @@ namespace BellTowerEscape.Server
                         }
                     }
                 }
+
+                // add new Meeples
+                AddMeepleToFloors();
 
                 // clear state variables
                 foreach (var elevator in Elevators.Values)
