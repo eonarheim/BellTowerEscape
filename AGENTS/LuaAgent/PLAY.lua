@@ -53,7 +53,7 @@ local function httpRequest(url, method, header, data)
 
     -- REQUEST IT!
     ok, code, headers = http.request{url = url, method = method, headers = sizeHeader, source = source, sink = save}
-
+    print("RESPONS", response[1])
     if code ~= 200 then
         print("Error Code:", code, table.concat(response, "\n\n\n"))
         print(url)
@@ -101,19 +101,21 @@ function client:logon()
     self.AuthToken = response.AuthToken
     self.GameId = response.GameId
     print("GameId", self.GameId)
+    print("AuthToken", self.AuthToken)
 end
 
 function client:getTurnInfo()
     local turnInfo = string.format("/api/game/%d/turn",  self.GameId)
     local response = httpRequest(self.url .. turnInfo, "GET", self.headers)
-    print(response.MillisecondsUntilNextTurn, "ms left")
+    print(response.TimeUntilNextTurn, "ms left")
     self.timeToNextTurn = response.MillisecondsUntilNextTurn
 end
 
 function client:getGameInfo()
-    local game = string.format("/api/game/%d/status/%s", self.GameId, self.AuthToken)
-    local data = httpRequest(self.url .. game, "POST", self.headers)
-    self.timeToNextTurn = data.MillisecondsUntilNextTurn
+    local gameInfo = { ["AuthToken"] = self.AuthToken, ["GameId"] = self.GameId }
+    local game = "/api/game/status"
+    local data = httpRequest(self.url .. game, "POST", self.headers, gameInfo)
+    self.timeToNextTurn = data.TimeUntilNextTurn
     return data
 end
 
@@ -128,7 +130,7 @@ function client:updateBanks(gameState)
 
     -- create the bank the first time around
     if not self.bank then
-        self.bank = bank:new(gameState.MyBank)
+        self.bank = bank:new(gameState.MyElevators)
     end
 
     -- figure out which floors people are going up/down on
@@ -137,26 +139,27 @@ function client:updateBanks(gameState)
     local maxFloor = 0
     local minFloor = math.huge
 
-    for i, peopleOnFloor in ipairs(gameState.PeopleWaiting) do
-        peopleGoingUp[peopleOnFloor.Floor] = peopleOnFloor.GoingUp
-        peopleGoingDown[peopleOnFloor.Floor] = peopleOnFloor.GoingDown
+    for i, peopleOnFloor in ipairs(gameState.Floors) do
+        local currentFloor = i - 1
+        peopleGoingUp[currentFloor] = peopleOnFloor.GoingUp
+        peopleGoingDown[currentFloor] = peopleOnFloor.GoingDown
 
         -- used when we want to switch elevator directions
-        if peopleOnFloor.Floor > maxFloor then
-            maxFloor = peopleOnFloor
+        if currentFloor > maxFloor then
+            maxFloor = currentFloor
         end
 
-        if peopleOnFloor.Floor < minFloor then
-            minFloor = peopleOnFloor.Floor
+        if currentFloor < minFloor then
+            minFloor = currentFloor
         end
     end
 
-    for i, elevator in ipairs(gameState.MyBank) do
+    for i, elevator in ipairs(gameState.MyElevators) do
         local currentId = elevator.Id
-        local currentFloor = elevator.Floor
+        local currentFloor = elevator.CurrentFloor
             -- go through every person and see if they want to get off here
             local TransferPeople = false
-            for i, person in ipairs(elevator.People) do
+            for i, person in ipairs(elevator.Meeples) do
                 if currentFloor == person.DesiredFloor then
                     TransferPeople = true
                 end
@@ -164,14 +167,14 @@ function client:updateBanks(gameState)
 
             -- See if we should pick up people on this floor heading up
             if self.bank.elevators[currentId].Function == "MoveUp" then
-                if peopleGoingUp[currentFloor] and peopleGoingUp[currentFloor] > 0 then
+                if peopleGoingUp[currentFloor] then
                     TransferPeople = true
                 end
             end
 
             -- See if we should pick up people on this floor heading down
             if self.bank.elevators[currentId].Function == "MoveDown" then
-                if peopleGoingDown[currentFloor] and peopleGoingDown[currentFloor] > 0 then
+                if peopleGoingDown[currentFloor] then
                     TransferPeople = true
                 end
             end
@@ -192,14 +195,14 @@ function client:updateBanks(gameState)
             end
 
             if TransferPeople then 
-                self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "TransferPeople"}
+                self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "stop"}
             else
 
                 if self.bank.elevators[currentId].Function == "MoveUp" then
-                    self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "MoveUp"}
+                    self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "up"}
 
                 elseif self.bank.elevators[currentId].Function == "MoveDown" then
-                    self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "MoveDown"}
+                    self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "down"}
 
                 else
                     error("uhhhhhh. This elevator doesn't have a Functions?! WHAT YOU DO?!?!?!")
@@ -212,19 +215,21 @@ end
 
 function client:update(gameState)
     -- LAGS BRO
-    self:getTurnInfo()
+    --self:getTurnInfo()
 
     -- figure out that bank!
     self:updateBanks(gameState)
 
     -- update turn info
-    self:getTurnInfo()
+    self:getGameInfo()
 end
 
 function client:sendUpdate()
-    local update = { AuthToken = self.AuthToken, GameId = self.GameId, MoveRequest = self.pendingMoves }
-    local response = httpRequest(self.url .. "/api/game/update", "POST", self.headers, update)
-    return response
+    for i, move in ipairs(self.pendingMoves) do
+        local update = { AuthToken = self.AuthToken, GameId = self.GameId, ElevatorId = move.ElevatorID, Direction = move.Function }
+        local response = httpRequest(self.url .. "/api/game/move", "POST", self.headers, update)
+    end
+
 end
 
 function client:start()
@@ -256,5 +261,5 @@ function client:start()
 
 end
 
-local agent = client:new("SampleLuaAgent", "http://localhost")
+local agent = client:new("SampleLuaAgent", "http://localhost:3193")
 agent:start()
