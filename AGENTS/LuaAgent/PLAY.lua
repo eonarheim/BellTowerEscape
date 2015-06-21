@@ -139,6 +139,7 @@ function client:updateBanks(gameState)
     local maxFloor = 0
     local minFloor = math.huge
 
+    print("TOTAL FLOORS", #gameState.Floors)
     for i, peopleOnFloor in ipairs(gameState.Floors) do
         local currentFloor = i - 1
         peopleGoingUp[currentFloor] = peopleOnFloor.GoingUp
@@ -156,31 +157,34 @@ function client:updateBanks(gameState)
 
     for i, elevator in ipairs(gameState.MyElevators) do
         local currentId = elevator.Id
-        local currentFloor = elevator.Floor
+        local currentFloor = elevator.Floor 
+            
+            local DropOff = false
+            local PickUp = false
+            
             -- go through every person and see if they want to get off here
-            local TransferPeople = false
             for i, person in ipairs(elevator.Meeples) do
                 if currentFloor == person.DesiredFloor then
-                    TransferPeople = true
+                    DropOff = true
                 end
             end
 
             -- See if we should pick up people on this floor heading up
             if self.bank.elevators[currentId].Function == "MoveUp" then
                 if peopleGoingUp[currentFloor] > 0 then
-                    TransferPeople = true
+                    PickUp = true
                 end
             end
 
             -- See if we should pick up people on this floor heading down
             if self.bank.elevators[currentId].Function == "MoveDown" then
                 if peopleGoingDown[currentFloor] > 0 then
-                    TransferPeople = true
+                    PickUp = true
                 end
             end
 
             -- ONE LAST THING. Figure out if we should swap this elevator's directions
-            if not TransferPeople then
+            if not (PickUp or DropOff) then
                 if self.bank.elevators[currentId].Function == "MoveUp" then
                     if currentFloor >= maxFloor then
                         self.bank.elevators[currentId].Function = "MoveDown"
@@ -194,7 +198,9 @@ function client:updateBanks(gameState)
                 end
             end
 
-            if TransferPeople then 
+            if DropOff then 
+                self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "stop"}
+            if PickUp and elevator.FreeSpace > 0 then
                 self.pendingMoves [ #self.pendingMoves+1 ] = {ElevatorID = currentId, Function = "stop"}
             else
 
