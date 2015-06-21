@@ -13,7 +13,28 @@ namespace BellTowerEscape.Server
         public Meeple(Game game, Floor floor) : base()
         {
             CurrentFloor = floor.Number;
-            Destination =  (int) Math.Floor(game.Random.NextDouble() * Game.NUMBER_OF_FLOORS);
+
+            // Gotta pick a floor that's not this one.
+            int goingUp = game.Random.Next(2);
+            // GOING UP, unless we're on the top floor
+            if (goingUp == 1 && CurrentFloor != Game.NUMBER_OF_FLOORS)
+            {
+                Destination = game.Random.Next(CurrentFloor + 1, Game.NUMBER_OF_FLOORS + 1);
+            }
+
+            // GOING DOWN, unless we're on the bottom floor
+            else if (CurrentFloor != 0)
+            {
+                Destination = game.Random.Next(CurrentFloor);
+            }
+
+            // GOING UP, because we're on the bottom floor
+            else
+            {
+                Destination = game.Random.Next(1, Game.NUMBER_OF_FLOORS + 1);
+            }
+
+            // because meeple get frustrated
             Patience = Math.Abs(Destination - CurrentFloor) * Meeple.FrustrationCoefficient + 3;
             Id = _maxId++;
             InElevator = false;
