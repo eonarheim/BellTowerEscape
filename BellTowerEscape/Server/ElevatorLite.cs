@@ -10,5 +10,6 @@ namespace BellTowerEscape.Server
         public int Id { get; set; }
         public int Floor { get; set; }
         public List<MeepleLite> Meeples { get; set; }
+        public int FreeSpace { get; set; }
     }
 }

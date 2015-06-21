@@ -17,9 +17,9 @@ namespace BellTowerEscape.Server
             // Gotta pick a floor that's not this one.
             int goingUp = game.Random.Next(2);
             // GOING UP, unless we're on the top floor
-            if (goingUp == 1 && CurrentFloor != Game.NUMBER_OF_FLOORS)
+            if (goingUp == 1 && CurrentFloor != Game.NUMBER_OF_FLOORS - 1)
             {
-                Destination = game.Random.Next(CurrentFloor + 1, Game.NUMBER_OF_FLOORS + 1);
+                Destination = game.Random.Next(CurrentFloor + 1, Game.NUMBER_OF_FLOORS);
             }
 
             // GOING DOWN, unless we're on the bottom floor
@@ -31,7 +31,7 @@ namespace BellTowerEscape.Server
             // GOING UP, because we're on the bottom floor
             else
             {
-                Destination = game.Random.Next(1, Game.NUMBER_OF_FLOORS + 1);
+                Destination = game.Random.Next(0, Game.NUMBER_OF_FLOORS);
             }
 
             // because meeple get frustrated

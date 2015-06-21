@@ -20,7 +20,7 @@ namespace BellTowerEscape.Server
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
-        private static int _AVERAGE_PEOPLE_TO_ADD_PER_FLOOR = 3; // this may need to be reworked
+        private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 3; // this may need to be reworked
 
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
@@ -98,7 +98,7 @@ namespace BellTowerEscape.Server
             {
                 Floor thisFloor;
                 bool success = Floors.TryGetValue(i, out thisFloor);
-                if (success) { thisFloor.SpawnMeeple(this, Random.Next(_AVERAGE_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
+                if (success) { thisFloor.SpawnMeeple(this, Random.Next(_MAX_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
             }
         }
 
@@ -220,7 +220,7 @@ namespace BellTowerEscape.Server
                 // we have validated control and existance of the elevator
                 if (command.Direction.ToLower() == "up")
                 {
-                    elevator.Floor = Math.Min(elevator.Floor + 1, NUMBER_OF_FLOORS);
+                    elevator.Floor = Math.Min(elevator.Floor + 1, NUMBER_OF_FLOORS - 1);
                     elevator.IsStopped = false;
                     result.Message = string.Format("Moved elevator {0} up successfully", command.ElevatorId);
                 }
