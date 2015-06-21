@@ -400,7 +400,7 @@ namespace BellTowerEscape.Server
                 {
                     foreach (var meeple in elevator.Meeples.ToList())
                     {
-                        if (elevator.Floor == meeple.Destination && !elevator.IsStopped)
+                        if (elevator.Floor == meeple.Destination && elevator.IsStopped)
                         {
                             elevator.Meeples.Remove(meeple);
                             _authTokens[elevator.PlayerToken].Score++;
