@@ -69,7 +69,11 @@ namespace BellTowerEscape.Controllers
 
         private bool IsValidStatusRequest(StatusCommand status)
         {
-            return status != null;
+            if (status != null && !string.IsNullOrWhiteSpace(status.AuthToken) && (status.GameId >= 0))
+            {
+                return true;
+            }
+            return false;
         }
 
 

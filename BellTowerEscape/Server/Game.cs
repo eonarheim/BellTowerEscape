@@ -326,13 +326,14 @@ namespace BellTowerEscape.Server
             if (this.elapsedTotalTurn >= SERVER_PROCESSING + TURN_DURATION)
             {
                 Processing = false;
+                _processingComplete = false;
                 this.elapsedTotalTurn = 0;
                 Turn++;
                 // publish viz update every turn
                 ClientManager.UpdateClientGame(this);
             }
 
-            if (Processing && !_processingComplete)
+            if (Processing)
             {
                 // for each floor move people to stopped elevators
                 for (var i = 0; i < Floors.Count; i++)
