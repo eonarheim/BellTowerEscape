@@ -38,6 +38,8 @@
             console.log("Received game update", game);
             // todo update game visualization
             console.log(game);
+
+            $("#turn").text(game.Turn);
         };
 
         $.connection.hub.start().done(function() {

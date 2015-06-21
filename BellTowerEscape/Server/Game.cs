@@ -343,6 +343,8 @@ namespace BellTowerEscape.Server
                 _processingComplete = false;
                 this.elapsedTotalTurn = 0;
                 Turn++;
+                // add new Meeples
+                AddMeepleToFloors();
                 // publish viz update every turn
                 ClientManager.UpdateClientGame(this);
             }
@@ -406,9 +408,6 @@ namespace BellTowerEscape.Server
                         }
                     }
                 }
-
-                // add new Meeples
-                AddMeepleToFloors();
 
                 // clear state variables
                 foreach (var elevator in Elevators.Values)

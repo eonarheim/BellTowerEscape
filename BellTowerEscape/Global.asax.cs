@@ -30,9 +30,9 @@ namespace BellTowerEscape
                 dest => dest.NumberOfMeeple, 
                 opt => opt.MapFrom(src => src.Meeples.Count)).ForMember(
                 dest => dest.GoingDown,
-                opt => opt.MapFrom(src => src.Meeples.Any(m => m.Destination < src.Number))).ForMember(
+                opt => opt.MapFrom(src => src.Meeples.Where(m => m.Destination < src.Number).Count())).ForMember(
                 dest => dest.GoingUp,
-                opt => opt.MapFrom(src => src.Meeples.Any(m => m.Destination > src.Number)));
+                opt => opt.MapFrom(src => src.Meeples.Where(m => m.Destination > src.Number).Count()));
             
             Mapper.AssertConfigurationIsValid();
 

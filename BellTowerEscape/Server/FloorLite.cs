@@ -8,7 +8,7 @@ namespace BellTowerEscape.Server
     public class FloorLite
     {
         public int NumberOfMeeple { get; set; }
-        public bool GoingUp{ get; set; }
-        public bool GoingDown { get; set; }
+        public int GoingUp{ get; set; }
+        public int GoingDown { get; set; }
     }
 }

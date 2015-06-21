@@ -167,14 +167,14 @@ function client:updateBanks(gameState)
 
             -- See if we should pick up people on this floor heading up
             if self.bank.elevators[currentId].Function == "MoveUp" then
-                if peopleGoingUp[currentFloor] then
+                if peopleGoingUp[currentFloor] > 0 then
                     TransferPeople = true
                 end
             end
 
             -- See if we should pick up people on this floor heading down
             if self.bank.elevators[currentId].Function == "MoveDown" then
-                if peopleGoingDown[currentFloor] then
+                if peopleGoingDown[currentFloor] > 0 then
                     TransferPeople = true
                 end
             end
