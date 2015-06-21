@@ -73,7 +73,7 @@ namespace BellTowerEscape.Server
             Elevators = new ConcurrentDictionary<int, Elevator>();
             for (int i = 0; i < _NUMBER_OF_ELEVATORS; i++)
             {
-                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = 0, Meeples = new List<Meeple>()});
+                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = Random.Next(_NUMBER_OF_ELEVATORS), Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
             for (int i = 0; i < NUMBER_OF_FLOORS; i++)
@@ -392,6 +392,7 @@ namespace BellTowerEscape.Server
                     }
                 }
 
+                //
 
                 // clear state variables
                 foreach (var elevator in Elevators.Values)
