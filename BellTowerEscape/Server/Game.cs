@@ -20,6 +20,7 @@ namespace BellTowerEscape.Server
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
+        private static int _AVERAGE_PEOPLE_TO_ADD_PER_FLOOR = 3; // this may need to be reworked
 
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
@@ -76,15 +77,29 @@ namespace BellTowerEscape.Server
                 Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = Random.Next(_NUMBER_OF_ELEVATORS), Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
+
             for (int i = 0; i < NUMBER_OF_FLOORS; i++)
             {
                 Floors.GetOrAdd(i, new Floor() {Meeples = new List<Meeple>(), Number = i});
             }
 
+            AddMeepleToFloors();
+
             Turn = 0;
             Running = false;
             _started = false;
             _gameLoop = new HighFrequencyTimer(60, this.Update);
+        }
+
+        private void AddMeepleToFloors()
+        {
+            // gotta add some Meeples. This should spawn some meeps on floors.
+            for (int i = 0; i < NUMBER_OF_FLOORS; i++)
+            {
+                Floor thisFloor;
+                bool success = Floors.TryGetValue(i, out thisFloor);
+                if (success) { thisFloor.SpawnMeeple(this, Random.Next(_AVERAGE_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
+            }
         }
 
         /// <summary>
@@ -380,9 +395,9 @@ namespace BellTowerEscape.Server
                 }
 
                 // score meeples
-                foreach (var elevator in Elevators.Values)
+                foreach (var elevator in Elevators.Values.ToList())
                 {
-                    foreach (var meeple in elevator.Meeples)
+                    foreach (var meeple in elevator.Meeples.ToList())
                     {
                         if (elevator.Floor == meeple.Destination && !elevator.IsStopped)
                         {
@@ -392,7 +407,8 @@ namespace BellTowerEscape.Server
                     }
                 }
 
-                //
+                // add new Meeples
+                AddMeepleToFloors();
 
                 // clear state variables
                 foreach (var elevator in Elevators.Values)
