@@ -79,7 +79,16 @@ namespace BellTowerEscape.Controllers
 
         private bool IsValidMoveRequest(MoveCommand move)
         {
-            return move != null;
+            if (move != null && !string.IsNullOrWhiteSpace(move.AuthToken) && move.GameId >= 0)
+            {
+                if (move.Direction.Equals("up", StringComparison.InvariantCultureIgnoreCase) ||
+                    move.Direction.Equals("down", StringComparison.InvariantCultureIgnoreCase) ||
+                    move.Direction.Equals("stop", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private bool IsValidLogonRequest(LogonCommand logon)
