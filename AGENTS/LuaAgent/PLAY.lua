@@ -156,7 +156,7 @@ function client:updateBanks(gameState)
 
     for i, elevator in ipairs(gameState.MyElevators) do
         local currentId = elevator.Id
-        local currentFloor = elevator.CurrentFloor
+        local currentFloor = elevator.Floor
             -- go through every person and see if they want to get off here
             local TransferPeople = false
             for i, person in ipairs(elevator.Meeples) do

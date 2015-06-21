@@ -9,7 +9,7 @@ namespace BellTowerEscape.Server
     {
         public int Id { get; set; }
         public string Owner { get; set; }
-        public int CurrentFloor { get; set; }
+        public int Floor { get; set; }
         public List<MeepleLite> Meeples { get; set; }
     }
 }

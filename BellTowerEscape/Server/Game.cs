@@ -172,10 +172,9 @@ namespace BellTowerEscape.Server
                 status = "Game waiting for Logons";
             }
 
-
             return new StatusResult()
             {
-                EnemyElevators = GetElevatorsForPlayer(command.AuthToken),
+                EnemyElevators = GetElevatorsForOtherPlayer(command.AuthToken),
                 MyElevators = GetElevatorsForPlayer(command.AuthToken),
                 TimeUntilNextTurn = (int) (_started ?  
                     (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime) : this.gameStartCountdown),
