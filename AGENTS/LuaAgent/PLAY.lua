@@ -52,9 +52,9 @@ local function httpRequest(url, method, header, data)
     sizeHeader["content-length"] = jsonsize
 
     -- REQUEST IT!
-    ok, code, headers = http.request{url = url, method = method, headers = sizeHeader, source = source, sink = save}
+    local ok, code, _ = http.request{url = url, method = method, headers = sizeHeader, source = source, sink = save}
     print("RESPONS", response[1])
-    if code ~= 200 then
+    if not ok then
         print("Error Code:", code, table.concat(response, "\n\n\n"))
         print(url)
         print(jsonString)
@@ -138,14 +138,14 @@ function client:updateBanks(gameState)
     local peopleGoingDown = {}
     local maxFloor = #gameState.Floors - 1
     local minFloor = 0
-print(maxFloor)
+
     for i, peopleOnFloor in ipairs(gameState.Floors) do
         local currentFloor = i - 1
         peopleGoingUp[currentFloor] = peopleOnFloor.GoingUp
         peopleGoingDown[currentFloor] = peopleOnFloor.GoingDown
     end
 
-    for i, elevator in ipairs(gameState.MyElevators) do
+    for _, elevator in ipairs(gameState.MyElevators) do
         local currentId = elevator.Id
         local currentFloor = elevator.Floor 
             
@@ -153,13 +153,13 @@ print(maxFloor)
             local PickUp = false
             
             -- go through every person and see if they want to get off here
-            for i, person in ipairs(elevator.Meeples) do
+            for _, person in ipairs(elevator.Meeples) do
                 if currentFloor == person.Destination then
                     DropOff = true
                 end
             end
 
-            -- ONE LAST THING. Figure out if we should swap this elevator's directions
+            -- Figure out if we should swap this elevator's directions
             if not DropOff then
                 if self.bank.elevators[currentId].Function == "MoveUp" then
                     if currentFloor >= maxFloor then
@@ -221,7 +221,7 @@ function client:update(gameState)
 end
 
 function client:sendUpdate()
-    for i, move in ipairs(self.pendingMoves) do
+    for _, move in ipairs(self.pendingMoves) do
         local update = { AuthToken = self.AuthToken, GameId = self.GameId, ElevatorId = move.ElevatorID, Direction = move.Function }
         local response = httpRequest(self.url .. "/api/game/move", "POST", self.headers, update)
     end
