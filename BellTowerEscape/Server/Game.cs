@@ -21,7 +21,7 @@ namespace BellTowerEscape.Server
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
         private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 2; // this may need to be reworked
-        private static double _LIKELIHOOD_PEOPLE_ARE_ADDED = 2 / Convert.ToDouble(NUMBER_OF_FLOORS); // percent chance that people are even added.
+        private static double _LIKELIHOOD_PEOPLE_ARE_ADDED = 1 / Convert.ToDouble(NUMBER_OF_FLOORS); // percent chance that people are even added.
 
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
@@ -75,7 +75,7 @@ namespace BellTowerEscape.Server
             Elevators = new ConcurrentDictionary<int, Elevator>();
             for (int i = 0; i < _NUMBER_OF_ELEVATORS; i++)
             {
-                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = Random.Next(_NUMBER_OF_ELEVATORS), Meeples = new List<Meeple>()});
+                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = Random.Next(NUMBER_OF_FLOORS-1), Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
 
@@ -349,7 +349,6 @@ namespace BellTowerEscape.Server
 
             if (Processing && !_processingComplete)
             {
-
                 // for each elevator check Meeple frustration
                 foreach (var elevator in Elevators.Values.ToList())
                 {
@@ -358,13 +357,16 @@ namespace BellTowerEscape.Server
                         meeple.Update();
                         if (meeple.Patience < 0 && elevator.IsStopped)
                         {
-                            // GET OFF
-                            // TODO: It may or may not be worth having that meeple be frustrated to the point where they don't want to get back on your elevators
-                            meeple.FrustratedAtPlayer = elevator.PlayerToken;
-                            Floor floor;
-                            Floors.TryGetValue(elevator.Floor, out floor);
-                            meeple.ResetMeeple(elevator.Floor);
-                            floor.Meeples.Add(meeple);
+                            // GET OFF. If the meeple is on the floor it wanted, you still get negative points.
+                            if (meeple.Destination != elevator.Floor)
+                            {
+                                // TODO: It may or may not be worth having that meeple be frustrated to the point where they don't want to get back on your elevators
+                                meeple.FrustratedAtPlayer = elevator.PlayerToken;
+                                Floor floor;
+                                Floors.TryGetValue(elevator.Floor, out floor);
+                                meeple.ResetMeeple(elevator.Floor);
+                                floor.Meeples.Add(meeple);
+                            }
                             elevator.Meeples.Remove(meeple);
                             _authTokens[elevator.PlayerToken].Score--;
                         }
