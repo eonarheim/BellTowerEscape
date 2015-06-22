@@ -20,30 +20,22 @@ class AgentBase:
         self.game_id = r.json()['GameId']
         self.auth_token = r.json()['AuthToken']
 
-    def get_turn_info(self):
-        r = requests.get(self.__endpoint+'/api/game/{0}/turn'.format(self.game_id), headers=self.__headers)
-        data = r.json
-        self.time_to_next_turn = data['MillisecondsUntilNextTurn']
-        return self._json_object_hook(data)
-
     def get_game_info(self):
-        r = requests.post(self.__endpoint+'/api/game/{0}/status/{1}'.format(self.game_id,self.auth_token), headers=self.__headers)
+        params = {'AuthToken': self.auth_token, 'GameId': self.game_id}
+        r = requests.post(self.__endpoint+'/api/game/status', data=json.dumps(params), headers=self.__headers)
         data = r.json()
-        bank = self.__parse_elevator(data['MyBank'])
-        people_waiting = map(self.__parse_people_waiting, data['PeopleWaiting'])
-        self.time_to_next_turn = data['MillisecondsUntilNextTurn']
+        bank = map(self.__parse_elevator, data['MyElevators'])
+        people_waiting = map(self.__parse_people_waiting, data['Floors'])
+        self.time_to_next_turn = data['TimeUntilNextTurn']
 
-        return GameStatus(data['IsGameOver'], data['Status'], data['GameId'], data['Turn'],
-                          data['MillisecondsUntilNextTurn'], bank, people_waiting)
+        return GameStatus(data['IsGameOver'], data['Status'], data['Id'], data['Turn'],
+                          data['TimeUntilNextTurn'], bank, people_waiting)
 
     def move_elevator(self, elevator, function):
-        duplicate_request = reduce(lambda prev, nxt: prev and nxt.elevator_id == elevator.id, self.__pending_move_requests, False)
-        if duplicate_request:
-            print "WARNING! A move request has already been issued for elevator {0}" .format(elevator.id)
-            return False
-
-        self.__pending_move_requests.append(MoveElevatorRequest(elevator, function))
-        return True
+        data = json.dumps({'AuthToken': self.auth_token, 'GameId': self.game_id,
+                           'ElevatorId': elevator, 'Direction': function})
+        r = requests.post(self.__endpoint+'/api/game/move', data=data, headers=self.__headers)
+        print(r.json())
 
     def update(self, game_state):
         pass #UPDATE GAME LOGIC HERE or in that extended class...!
@@ -56,7 +48,7 @@ class AgentBase:
 
             is_running = True
             while is_running:
-
+                print("NEW TURN")
                 gs = self.get_game_info()
                 if gs.is_game_over:
                     is_running = False
@@ -65,16 +57,9 @@ class AgentBase:
                     break
 
                 self.update(gs)
-                self.send_update(self.__pending_move_requests)
-                self.__pending_move_requests = []
-
+                gs = self.get_game_info()
                 if self.time_to_next_turn > 0:
                     sleep(self.time_to_next_turn/1000)
-
-    def send_update(self, move_elevator_requests):
-        data = json.dumps({'AuthToken': self.auth_token, 'GameId': self.game_id,
-                           'MoveElevatorRequests': self.__serialize__elevator_requests(move_elevator_requests)})
-        r = requests.post(self.__endpoint+'/api/game/update'.format(self.game_id, self.auth_token), data=data, headers=self.__headers)
 
     def __serialize__elevator_requests(self, move_elevator_requests):
         ret_data = []
@@ -83,14 +68,14 @@ class AgentBase:
         return ret_data
 
     def __parse_elevator(self, elevator_json):
-        people = map(self.__parse_Meeple, elevator_json['People'])
-        return Elevator(elevator_json['ElevatorID'], elevator_json['Floor'], elevator_json['NumberOfOccupants'], people)
+        people = map(self.__parse_Meeple, elevator_json['Meeples'])
+        return Elevator(elevator_json['Id'], elevator_json['Floor'], elevator_json['FreeSpace'], people)
 
     def __parse_Meeple(self, meeple_json):
-        return Meeple(meeple_json['PersonID'], meeple_json['DesiredFloor'], meeple_json['CurrentTurn'])
+        return Meeple(meeple_json['Id'], meeple_json['Destination'], meeple_json['Patience'])
 
     def __parse_people_waiting(self, people_waiting_json):
-        return PeopleWaiting(people_waiting_json['Floor'], people_waiting_json['NumberOfPeopleWaiting'],
+        return PeopleWaiting(people_waiting_json['NumberOfMeeple'],
                             people_waiting_json['GoingUp'], people_waiting_json['GoingDown'])
 
 #DTOs
@@ -103,7 +88,7 @@ class Elevator:
     def __init__(self, unique_id, floor, number_of_occupants, people):
         self.id = unique_id
         self.floor = floor
-        self.number_of_occupants = number_of_occupants
+        self.free_space = number_of_occupants
         self.people = people
 
 class Meeple:
@@ -113,8 +98,7 @@ class Meeple:
         self.turns_frustration = turns_frustration
 
 class PeopleWaiting:
-    def __init__(self, floor, number_of_people, people_going_up, people_going_down):
-        self.floor = floor
+    def __init__(self, number_of_people, people_going_up, people_going_down):
         self.number_of_people = number_of_people
         self.people_going_up = people_going_up
         self.people_going_down = people_going_down

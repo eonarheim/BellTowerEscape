@@ -136,23 +136,13 @@ function client:updateBanks(gameState)
     -- figure out which floors people are going up/down on
     local peopleGoingUp = {}
     local peopleGoingDown = {}
-    local maxFloor = 0
-    local minFloor = math.huge
-
-    print("TOTAL FLOORS", #gameState.Floors)
+    local maxFloor = #gameState.Floors - 1
+    local minFloor = 0
+print(maxFloor)
     for i, peopleOnFloor in ipairs(gameState.Floors) do
         local currentFloor = i - 1
         peopleGoingUp[currentFloor] = peopleOnFloor.GoingUp
         peopleGoingDown[currentFloor] = peopleOnFloor.GoingDown
-
-        -- used when we want to switch elevator directions
-        if currentFloor > maxFloor then
-            maxFloor = currentFloor
-        end
-
-        if currentFloor < minFloor then
-            minFloor = currentFloor
-        end
     end
 
     for i, elevator in ipairs(gameState.MyElevators) do
