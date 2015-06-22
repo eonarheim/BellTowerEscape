@@ -50,6 +50,11 @@ namespace CSharpAgent
             });
             var result = await response.Content.ReadAsAsync<StatusResult>();
             TimeToNextTurn = result.TimeUntilNextTurn;
+            Console.WriteLine(string.Format("\nTURN: {0} \t DELIVERED: {1}", result.Turn, result.Delivered));
+            foreach (Elevator e in result.MyElevators)
+            {
+                Console.WriteLine(string.Format("Elevator {0} is on floor {1} with {2} Meeples", e.Id, e.Floor, e.Meeples.Count));
+            }
             return result;
         }
 
@@ -58,7 +63,7 @@ namespace CSharpAgent
             var results = new List<MoveResult>();
             foreach (var moveCommand in moveCommands)
             {
-                Console.WriteLine(string.Format("posting move {0} with token {1}", moveCommand.Direction, moveCommand.AuthToken));
+                Console.WriteLine(string.Format("posting move {0} for elevator {1}", moveCommand.Direction, moveCommand.ElevatorId));
                 var response = await _client.PostAsJsonAsync("api/game/move", moveCommand);
                 var result = await response.Content.ReadAsAsync<MoveResult>();
                 results.Add(result);
@@ -76,19 +81,13 @@ namespace CSharpAgent
                 return false;
             }
 
-            this._pendingMoveRequests.Add(new MoveCommand()
-            {
-                AuthToken = AuthToken,
-                GameId = GameId,
-                ElevatorId = elevator.Id,
-                Direction = direction
-            });
+            this._pendingMoveRequests.Add(new MoveCommand(AuthToken, GameId, elevator.Id, direction));
             return true;
         }
 
         public virtual void Update(StatusResult status)
         {
-            // todo implement your agent's logic here
+
         }
 
 

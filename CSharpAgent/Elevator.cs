@@ -9,8 +9,8 @@ namespace CSharpAgent
     public class Elevator
     {
         public int Id { get; set; }
-        public string Owner { get; set; }
-        public int CurrentFloor { get; set; }
+        public int Floor { get; set; }
+        public int FreeSpace { get; set; }
         public List<Meeple> Meeples { get; set; }
     }
 }
