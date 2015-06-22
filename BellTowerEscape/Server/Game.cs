@@ -20,7 +20,8 @@ namespace BellTowerEscape.Server
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
-        private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 3; // this may need to be reworked
+        private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 2; // this may need to be reworked
+        private static double _LIKELIHOOD_PEOPLE_ARE_ADDED = 2 / Convert.ToDouble(NUMBER_OF_FLOORS); // percent chance that people are even added.
 
         private HighFrequencyTimer _gameLoop = null;
         private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
@@ -98,7 +99,7 @@ namespace BellTowerEscape.Server
             {
                 Floor thisFloor;
                 bool success = Floors.TryGetValue(i, out thisFloor);
-                if (success) { thisFloor.SpawnMeeple(this, Random.Next(_MAX_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
+                if (success && Random.NextDouble() <= _LIKELIHOOD_PEOPLE_ARE_ADDED) { thisFloor.SpawnMeeple(this, Random.Next(_MAX_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
             }
         }
 
@@ -201,8 +202,6 @@ namespace BellTowerEscape.Server
                 Status = status
             };
         }
-
-        
 
         public MoveResult MoveElevator(MoveCommand command)
         {
@@ -351,6 +350,28 @@ namespace BellTowerEscape.Server
             if (Processing && !_processingComplete)
             {
 
+                // for each elevator check Meeple frustration
+                foreach (var elevator in Elevators.Values.ToList())
+                {
+                    foreach (var meeple in elevator.Meeples.ToList())
+                    {
+                        meeple.Update();
+                        if (meeple.Patience < 0 && elevator.IsStopped)
+                        {
+                            // GET OFF
+                            // TODO: It may or may not be worth having that meeple be frustrated to the point where they don't want to get back on your elevators
+                            meeple.FrustratedAtPlayer = elevator.PlayerToken;
+                            Floor floor;
+                            Floors.TryGetValue(elevator.Floor, out floor);
+                            meeple.ResetMeeple(elevator.Floor);
+                            floor.Meeples.Add(meeple);
+                            elevator.Meeples.Remove(meeple);
+                            _authTokens[elevator.PlayerToken].Score--;
+                        }
+
+                    }
+                }
+
                 // score meeples
                 foreach (var elevator in Elevators.Values.ToList())
                 {
@@ -381,7 +402,7 @@ namespace BellTowerEscape.Server
                             foreach (var elevator in elevators)
                             {
                                 var meeple = Floors[i].Meeples.FirstOrDefault();
-                                if (meeple != null)
+                                if (meeple != null && elevator.FreeSpace > 0)
                                 {
                                     Floors[i].Meeples.Remove(meeple);
                                     elevator.Meeples.Add(meeple);
@@ -392,20 +413,6 @@ namespace BellTowerEscape.Server
                             meepleOnFloor = Floors[i].Meeples.Count;
                         }
                         
-                    }
-                }
-
-                // for each elevator check Meeple frustration
-                foreach (var elevator in Elevators.Values)
-                {
-                    foreach (var meeple in elevator.Meeples)
-                    {
-                        meeple.Update();
-                        if (meeple.Patience < 0)
-                        {
-                            // todo get off 
-                        }
-
                     }
                 }
 
@@ -442,7 +449,6 @@ namespace BellTowerEscape.Server
             Running = false;
             _gameLoop.Stop();
         }
-
 
     }
 }

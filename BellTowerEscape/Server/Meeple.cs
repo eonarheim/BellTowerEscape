@@ -45,10 +45,19 @@ namespace BellTowerEscape.Server
             Patience--;
         }
 
+        public void ResetMeeple(int floor)
+        {
+            InElevator = false;
+            CurrentFloor = floor;
+            Patience = Math.Abs(Destination - CurrentFloor) * Meeple.FrustrationCoefficient + 3;
+        }
+
         public int Id { get; private set; }
         public bool InElevator { get; set; }
         public int Destination { get; set; }
         public int CurrentFloor { get; set; }
         public int Patience { get; private set; }
+        public string FrustratedAtPlayer { get; set; }
+
     }
 }
