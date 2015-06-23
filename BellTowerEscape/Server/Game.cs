@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using System.Web;
 using AutoMapper;
@@ -140,6 +142,43 @@ namespace BellTowerEscape.Server
             result.GameId = Id;
             
             return result;
+        }
+
+        public void LogonDemoAgent(string playerName)
+        {
+            var result = new LogonResult();
+            if (!_players.ContainsKey(playerName))
+            {
+                var newPlayer = new Player()
+                {
+                    AuthToken = System.Guid.NewGuid().ToString(),
+                    PlayerName = playerName
+                };
+
+                var success = _players.TryAdd(playerName, newPlayer);
+                var success2 = _authTokens.TryAdd(newPlayer.AuthToken, newPlayer);
+
+                if (success && success2)
+                {
+                    System.Diagnostics.Debug.WriteLine("Player logon [{0}]:[{1}]", newPlayer.PlayerName,
+                        newPlayer.AuthToken);
+                }
+
+                _allocateElevators(newPlayer.AuthToken);
+                result.AuthToken = newPlayer.AuthToken;
+                result.GameId = Id;
+                result.GameStart = (int)this.gameStartCountdown;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Player {0} already logged on!", playerName);
+            }
+            result.GameId = Id;
+            var agentTask = Task.Factory.StartNew(() =>
+            {
+                AgentBase sweetDemoAgent = new AgentBase(playerName, "http://localhost:3193");
+                sweetDemoAgent.Start(result).Wait();
+            });
         }
 
         public List<ElevatorLite> GetElevatorsForPlayer(string token)

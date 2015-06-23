@@ -48,7 +48,7 @@ namespace BellTowerEscape.Server
         public LogonResult Execute(LogonCommand command)
         {
             var game = GetNewGame();
-
+            game.LogonDemoAgent("DemoAgent");
             var result = game.LogonPlayer(command.AgentName);
 
             return result;
@@ -63,7 +63,6 @@ namespace BellTowerEscape.Server
         public StatusResult Execute(StatusCommand command)
         {
             var game = Games[command.GameId];
-
             var result = game.GetStatus(command);
             return result;
         }
