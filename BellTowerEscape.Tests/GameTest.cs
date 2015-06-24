@@ -58,10 +58,13 @@ namespace BellTowerEscape.Tests
                 ElevatorId = 0
             };
 
+            Elevator elevator;
+            game.Elevators.TryGetValue(0, out elevator);
+            elevator.Floor = 0;
+
             var result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
 
-            Elevator elevator;
             game.Elevators.TryGetValue(0, out elevator);
             Assert.AreEqual(elevator.Floor, 1);
 
@@ -73,6 +76,7 @@ namespace BellTowerEscape.Tests
             // should work on the other elevator
             game.Elevators.TryGetValue(1, out elevator);
             command.ElevatorId = 1;
+            elevator.Floor = 0;
             result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
             Assert.AreEqual(elevator.Floor, 1);
@@ -93,12 +97,15 @@ namespace BellTowerEscape.Tests
                 ElevatorId = 0
             };
 
+            Elevator elevator;
+            game.Elevators.TryGetValue(0, out elevator);
+            elevator.Floor = 3;
+
             var result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
 
-            Elevator elevator;
             game.Elevators.TryGetValue(0, out elevator);
-            Assert.AreEqual(elevator.Floor, 1);
+            Assert.AreEqual(elevator.Floor, 4);
 
         }
 
@@ -123,7 +130,9 @@ namespace BellTowerEscape.Tests
 
             Elevator elevator;
             game.Elevators.TryGetValue(0, out elevator);
-            Assert.AreEqual(elevator.Floor, 1);
+            //Assert.AreEqual(elevator.Floor, 1);
+            // elevators now start on a random floor.
+            int oldFloor = elevator.Floor;
 
             game.Update(Game.TURN_DURATION);
             game.Update(Game.SERVER_PROCESSING);
@@ -132,7 +141,19 @@ namespace BellTowerEscape.Tests
             result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
             game.Elevators.TryGetValue(0, out elevator);
-            Assert.AreEqual(elevator.Floor, 0);
+            if (oldFloor > 0)
+            {
+                Assert.AreEqual(elevator.Floor, oldFloor - 1);
+            }
+            else if (oldFloor == 0)
+            {
+                Assert.AreEqual(elevator.Floor, 0);
+            }
+            else
+            {
+                // not possible
+                Assert.Fail();
+            }
 
         }
 
@@ -245,10 +266,13 @@ namespace BellTowerEscape.Tests
                 ElevatorId = 0
             };
 
+            Elevator elevator;
+            game.Elevators.TryGetValue(0, out elevator);
+            elevator.Floor = 0;
+
             var result = game.MoveElevator(command);
             Assert.IsTrue(result.Success);
 
-            Elevator elevator;
             game.Elevators.TryGetValue(0, out elevator);
             Assert.AreEqual(elevator.Floor, 1);
 
