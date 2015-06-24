@@ -8,6 +8,7 @@ namespace BellTowerEscape.Commands
         public int Id { get; set; }
         public int Turn { get; set; }
         public int Delivered { get; set; }
+        public int EnemyDelivered { get; set; }
         public List<ElevatorLite> MyElevators { get; set; } 
         public List<ElevatorLite> EnemyElevators { get; set; }
         public List<FloorLite> Floors { get; set; }

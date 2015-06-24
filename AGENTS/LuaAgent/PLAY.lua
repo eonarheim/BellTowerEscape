@@ -53,7 +53,6 @@ local function httpRequest(url, method, header, data)
 
     -- REQUEST IT!
     local ok, code, _ = http.request{url = url, method = method, headers = sizeHeader, source = source, sink = save}
-    print("RESPONS", response[1])
     if not ok then
         print("Error Code:", code, table.concat(response, "\n\n\n"))
         print(url)
@@ -117,6 +116,17 @@ function client:getGameInfo()
     local data = httpRequest(self.url .. game, "POST", self.headers, gameInfo)
     self.timeToNextTurn = data.TimeUntilNextTurn
     return data
+end
+
+
+function client:print(gameState)
+    print("TURN: " .. gameState.Turn .. "\tDELIVERED: " .. gameState.Delivered .. "\tENEMY DELIVERED: " .. gameState.EnemyDelivered)
+    for _, elevator in ipairs(gameState.EnemyElevators) do
+        print("Enemy Elevator " .. elevator.Id .. " is on floor " .. elevator.Floor .. " with " .. #elevator.Meeples .. " Meeples")
+    end
+    for _, elevator in ipairs(gameState.MyElevators) do
+        print("My Elevator " .. elevator.Id .. " is on floor " .. elevator.Floor .. " with " .. #elevator.Meeples .. " Meeples")
+    end
 end
 
 
@@ -213,6 +223,9 @@ function client:update(gameState)
     -- LAGS BRO
     --self:getTurnInfo()
 
+    -- print out some infos!
+    self:print(gameState)
+
     -- figure out that bank!
     self:updateBanks(gameState)
 
@@ -224,6 +237,7 @@ function client:sendUpdate()
     for _, move in ipairs(self.pendingMoves) do
         local update = { AuthToken = self.AuthToken, GameId = self.GameId, ElevatorId = move.ElevatorID, Direction = move.Function }
         local response = httpRequest(self.url .. "/api/game/move", "POST", self.headers, update)
+        print(response.Message)
     end
 
 end
@@ -233,7 +247,7 @@ function client:start()
     local isRunning = true
     
     while isRunning do
-        print("NEW TURN")
+        print("\nNEW TURN")
         local gameState = self:getGameInfo()
         if gameState.IsGameOver then
             isRunning = false

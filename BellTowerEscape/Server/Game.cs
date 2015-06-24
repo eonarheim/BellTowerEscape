@@ -189,7 +189,12 @@ namespace BellTowerEscape.Server
         public List<ElevatorLite> GetElevatorsForOtherPlayer(string token)
         {
             return this.Elevators.Values.Where(e => e.PlayerToken != token).Select(Mapper.Map<ElevatorLite>).ToList();
-        } 
+        }
+
+        public int GetEnemyDelivered(string token)
+        {
+            return this._authTokens.Values.Where(e => e.AuthToken != token).First().Score;
+        }
 
         private void _allocateElevators(string token)
         {
@@ -234,6 +239,7 @@ namespace BellTowerEscape.Server
                 TimeUntilNextTurn = (int) (_started ?  
                     (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime) : this.gameStartCountdown),
                 Delivered = _authTokens[command.AuthToken].Score,
+                EnemyDelivered = GetEnemyDelivered(command.AuthToken),
                 Floors = Floors.Values.Select(Mapper.Map<FloorLite>).ToList(),
                 Id = this.Id,
                 Turn = this.Turn,
