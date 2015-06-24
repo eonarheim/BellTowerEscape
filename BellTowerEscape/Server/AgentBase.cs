@@ -31,14 +31,6 @@ namespace BellTowerEscape.Server
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        protected async Task<LogonResult> Logon(LogonResult result)
-        {
-            AuthToken = result.AuthToken;
-            GameId = result.GameId;
-            Console.WriteLine("Your game Id is " + result.GameId);
-            return result;
-        }
-
         protected async Task<StatusResult> UpdateGameState()
         {
             var response = await _client.PostAsJsonAsync("api/game/status", new StatusCommand()
@@ -202,7 +194,9 @@ namespace BellTowerEscape.Server
 
         public async Task Start(LogonResult demoLogon)
         {
-            Logon(demoLogon).Wait();
+            AuthToken = demoLogon.AuthToken;
+            GameId = demoLogon.GameId;
+
             if (!_isRunning)
             {
                 _isRunning = true;

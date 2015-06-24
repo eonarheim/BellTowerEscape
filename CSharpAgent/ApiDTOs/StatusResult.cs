@@ -11,6 +11,7 @@ namespace CSharpAgent.ApiDTOs
         public int Id { get; set; }
         public int Turn { get; set; }
         public int Delivered { get; set; }
+        public int EnemyDelivered { get; set; }
         public List<Elevator> MyElevators { get; set; }
         public List<Elevator> EnemyElevators { get; set; }
         public List<Floor> Floors { get; set; }

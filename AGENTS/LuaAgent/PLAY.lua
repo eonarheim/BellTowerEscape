@@ -129,6 +129,11 @@ function client:print(gameState)
     end
 end
 
+function client:printFloors(gameState)
+    for i, floor in ipairs(gameState.Floors) do
+        print("Floor " .. i-1 .. " with " .. floor.NumberOfMeeple .. " Meeples")
+    end
+end
 
 function client:updateBanks(gameState)
 
@@ -225,6 +230,8 @@ function client:update(gameState)
 
     -- print out some infos!
     self:print(gameState)
+    
+    --self:printFloors(gameState)
 
     -- figure out that bank!
     self:updateBanks(gameState)

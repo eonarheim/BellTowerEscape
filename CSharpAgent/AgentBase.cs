@@ -50,10 +50,14 @@ namespace CSharpAgent
             });
             var result = await response.Content.ReadAsAsync<StatusResult>();
             TimeToNextTurn = result.TimeUntilNextTurn;
-            Console.WriteLine(string.Format("\nTURN: {0} \t DELIVERED: {1}", result.Turn, result.Delivered));
+            Console.WriteLine(string.Format("\nTURN: {0} \t DELIVERED: {1} \t ENEMY DELIVERED {2}", result.Turn, result.Delivered, result.EnemyDelivered));
+            foreach (Elevator e in result.EnemyElevators)
+            {
+                Console.WriteLine(string.Format("Enemy Elevator {0} is on floor {1} with {2} Meeples", e.Id, e.Floor, e.Meeples.Count));
+            }
             foreach (Elevator e in result.MyElevators)
             {
-                Console.WriteLine(string.Format("Elevator {0} is on floor {1} with {2} Meeples", e.Id, e.Floor, e.Meeples.Count));
+                Console.WriteLine(string.Format("My Elevator {0} is on floor {1} with {2} Meeples", e.Id, e.Floor, e.Meeples.Count));
             }
             return result;
         }

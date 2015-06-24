@@ -15,7 +15,7 @@ namespace BellTowerEscape.Server
     public class Game
     {
         private static int _MAXID = 0;
-        public static int START_DELAY = 5000; // 5 seconds
+        public static int START_DELAY = 500; // 5 seconds
         public static int TURN_DURATION = 2000; // 2 seconds
         public static int SERVER_PROCESSING = 2000; // 2 seconds
         public static int MAX_TURN = 500;
@@ -432,34 +432,26 @@ namespace BellTowerEscape.Server
                     }
                 }
 
-                // for each floor move people to stopped elevators
-                for (var i = 0; i < Floors.Count; i++)
+                // for each floor
+                for (int i = 0; i < Floors.Count; i++)
                 {
-                    var meepleOnFloor = Floors[i].Meeples.Count;
-                    var elevatorsStoppedOnFloor = Elevators.Values.Where(e => e.IsStopped && e.Floor == i).OrderByDescending(e => e.FreeSpace).ToList();
-
-                    foreach (var group in elevatorsStoppedOnFloor.GroupBy(e => e.FreeSpace, e => e))
+                    // get all stopped elevators based on capacity
+                    List<Elevator> elevatorsStoppedOnFloor = Elevators.Values.Where(e => e.IsStopped && e.Floor == i).ToList();
+                    // ensure "fairness" by shuffling
+                    elevatorsStoppedOnFloor.Shuffle(this);
+                    // sort ascnedingly
+                    elevatorsStoppedOnFloor.OrderByDescending(e => e.FreeSpace);
+                    
+                    // add the meeples on the floor until capacity is met. Pop and continue with next elevator
+                    foreach (Elevator elevator in elevatorsStoppedOnFloor)
                     {
-                        while (meepleOnFloor > 0 && elevatorsStoppedOnFloor.Any(e => e.FreeSpace > 0))
+                        while (Floors[i].Meeples.Count > 0 && elevator.FreeSpace > 0)
                         {
-                            var free = group.Key;
-                            var elevators = group.ToList();
-                            elevators.Shuffle(this);
-
-                            foreach (var elevator in elevators)
-                            {
-                                var meeple = Floors[i].Meeples.FirstOrDefault();
-                                if (meeple != null && elevator.FreeSpace > 0)
-                                {
-                                    Floors[i].Meeples.Remove(meeple);
-                                    elevator.Meeples.Add(meeple);
-                                    meeple.InElevator = true;
-
-                                }
-                            }
-                            meepleOnFloor = Floors[i].Meeples.Count;
+                            Meeple meeple = Floors[i].Meeples[0];
+                            Floors[i].Meeples.Remove(meeple);
+                            elevator.Meeples.Add(meeple);
+                            meeple.InElevator = true;
                         }
-                        
                     }
                 }
 

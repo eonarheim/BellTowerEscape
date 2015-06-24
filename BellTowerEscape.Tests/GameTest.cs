@@ -186,7 +186,11 @@ namespace BellTowerEscape.Tests
             var meeples = new List<Meeple>()
             {
                 new Meeple(game, game.Floors[0]){Destination = 10},
-                new Meeple(game, game.Floors[0]){Destination = 7}
+                new Meeple(game, game.Floors[0]){Destination = 7},
+                new Meeple(game, game.Floors[0]){Destination = 7},
+                new Meeple(game, game.Floors[0]){Destination = 7},
+                new Meeple(game, game.Floors[0]){Destination = 7},
+                new Meeple(game, game.Floors[0]){Destination = 7},
             };
             game.Floors[0].Meeples = meeples;
             
@@ -208,11 +212,12 @@ namespace BellTowerEscape.Tests
             Assert.IsTrue(result.Success);
             Assert.AreEqual(e0.IsStopped, true);
             Assert.AreEqual(e0.Floor, 0);
-            Assert.AreEqual(e0.Meeples.Count, 2);
+            Assert.AreEqual(e0.Meeples.Count, 3);
+
 
             Assert.AreEqual(e1.IsStopped, true);
             Assert.AreEqual(e1.Floor, 0);
-            Assert.AreEqual(e1.Meeples.Count, 2);
+            Assert.AreEqual(e1.Meeples.Count, 5);
             foreach (var meeple in e1.Meeples)
             {
                 Assert.IsTrue(meeple.InElevator);
