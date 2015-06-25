@@ -25,7 +25,6 @@ namespace BellTowerEscape.Server
         {
             var game = new Game();
             Games.Add(game.Id, game);
-            game.Start();
             return game;
         }
         
@@ -48,8 +47,28 @@ namespace BellTowerEscape.Server
         public LogonResult Execute(LogonCommand command)
         {
             var game = GetNewGame();
-            game.LogonDemoAgent("DemoAgent");
+            var demoResult = game.LogonPlayer("DemoAgent");
+            game.StartDemoAgent(demoResult, "DemoAgent");
             var result = game.LogonPlayer(command.AgentName);
+            game.Start();
+
+            return result;
+        }
+
+        [RecordCommand]
+        public LogonResult Execute(LogonP1Command command)
+        {
+            var game = GetNewGame();
+            return game.LogonPlayer(command.AgentName);
+        }
+
+        [ValidateAuthToken]
+        [RecordCommand]
+        public LogonResult Execute(LogonP2Command command)
+        {
+            var game = Games[command.GameId];
+            var result = game.LogonPlayer(command.AgentName);
+            game.Start();
 
             return result;
         }

@@ -46,6 +46,28 @@ namespace BellTowerEscape.Controllers
             return null;
         }
         [HttpPost]
+        [Route("api/game/logonP1")]
+        public LogonResult LogonP1(LogonP1Command logon)
+        {
+            if (IsValidLogonRequest(logon))
+            {
+                return _gameManager.Execute(logon);
+            }
+            return null;
+        }
+
+        [HttpPost]
+        [Route("api/game/logonP2")]
+        public LogonResult LogonP2(LogonP2Command logon)
+        {
+            if (IsValidP2LogonRequest(logon))
+            {
+                return _gameManager.Execute(logon);
+            }
+            return null;
+        }
+
+        [HttpPost]
         [Route("api/game/move")]
         public MoveResult Move(MoveCommand move)
         {
@@ -97,6 +119,20 @@ namespace BellTowerEscape.Controllers
             {
                 return true;
             }
+            return false;
+
+        }
+
+        private bool IsValidP2LogonRequest(LogonP2Command logon)
+        {
+            if (IsValidLogonRequest(logon))
+            {
+                if (!string.IsNullOrWhiteSpace(logon.AuthToken) && logon.GameId >= 0)
+                {
+                    return true;
+                }
+            } 
+            
             return false;
 
         }

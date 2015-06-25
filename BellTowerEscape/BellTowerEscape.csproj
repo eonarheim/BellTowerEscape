@@ -209,9 +209,11 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Commands\LogonP1Command.cs" />
     <Compile Include="Commands\KillCommand.cs" />
     <Compile Include="Commands\KillResult.cs" />
     <Compile Include="Commands\LogonCommand.cs" />
+    <Compile Include="Commands\LogonP2Command.cs" />
     <Compile Include="Commands\LogonResult.cs" />
     <Compile Include="Commands\MoveCommand.cs" />
     <Compile Include="Commands\MoveResult.cs" />

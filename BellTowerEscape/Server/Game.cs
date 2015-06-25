@@ -15,10 +15,10 @@ namespace BellTowerEscape.Server
     public class Game
     {
         private static int _MAXID = 0;
-        public static int START_DELAY = 500; // 5 seconds
+        public static int START_DELAY = 5000; // 5 seconds
         public static int TURN_DURATION = 2000; // 2 seconds
         public static int SERVER_PROCESSING = 2000; // 2 seconds
-        public static int MAX_TURN = 500;
+        public static int MAX_TURN = 5;
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
@@ -144,40 +144,12 @@ namespace BellTowerEscape.Server
             return result;
         }
 
-        public void LogonDemoAgent(string playerName)
+        public void StartDemoAgent(LogonResult demoResult, string playerName)
         {
-            var result = new LogonResult();
-            if (!_players.ContainsKey(playerName))
-            {
-                var newPlayer = new Player()
-                {
-                    AuthToken = System.Guid.NewGuid().ToString(),
-                    PlayerName = playerName
-                };
-
-                var success = _players.TryAdd(playerName, newPlayer);
-                var success2 = _authTokens.TryAdd(newPlayer.AuthToken, newPlayer);
-
-                if (success && success2)
-                {
-                    System.Diagnostics.Debug.WriteLine("Player logon [{0}]:[{1}]", newPlayer.PlayerName,
-                        newPlayer.AuthToken);
-                }
-
-                _allocateElevators(newPlayer.AuthToken);
-                result.AuthToken = newPlayer.AuthToken;
-                result.GameId = Id;
-                result.GameStart = (int)this.gameStartCountdown;
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Player {0} already logged on!", playerName);
-            }
-            result.GameId = Id;
             var agentTask = Task.Factory.StartNew(() =>
             {
                 AgentBase sweetDemoAgent = new AgentBase(playerName, "http://localhost:3193");
-                sweetDemoAgent.Start(result).Wait();
+                sweetDemoAgent.Start(demoResult).Wait();
             });
         }
 
@@ -219,7 +191,15 @@ namespace BellTowerEscape.Server
 
             if (this.GameOver)
             {
-                status = "Game Over";
+                if (this._authTokens.Values.GroupBy(e => e.Score).First().Count() == this._players.Count())
+                {
+                    status = "Game Over - It's a TIE!";
+                }
+                else
+                {
+                    var winningPlayer = this._authTokens.Values.OrderByDescending(e => e.Score).First().PlayerName;
+                    status = "Game Over - " + winningPlayer + " wins!";
+                }
             }
 
             if (this.Running)
@@ -372,6 +352,7 @@ namespace BellTowerEscape.Server
 
             if (GameOver)
             {
+                this.Stop();
                 return;
             }
 
