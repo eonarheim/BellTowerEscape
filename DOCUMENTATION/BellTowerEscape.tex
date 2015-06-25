@@ -17,9 +17,9 @@
 \vspace{2pc}
 
 \section*{Background}
-Soon after Jurassic Park re-opened, some of the dinosaurs were purchased by the Pillsbury family for a Minneapolis branch of Jurassic Park. Unfortunately, they escaped and have made their way to the GMI campus. During an East Wing wide meeting on every floor of the Bell Tower involving network latency, the dinosaurs started getting in...! Due to the inciting panic, and velociraptors taking over the lower levels of the stair well (the doors only open inwards - so there's nothing to worry about!), the Bell Tower Elevators have been overloaded with people trying to get away from the trapped velociraptors and other people trying to get out of the building - as such, they need to be reporgrammed.
+Soon after Jurassic Park re-opened, some of the dinosaurs were purchased by the Pillsbury family for a Minneapolis branch of Jurassic Park. Unfortunately, they escaped and have made their way to the GMI campus. During an East Wing wide meeting on every floor of the Bell Tower involving network latency, the dinosaurs started getting in...! Due to the inciting panic, and velociraptors taking over the lower levels of the stair well (the doors only open inwards - so there's nothing to worry about!), the Bell Tower Elevators have been overloaded with people trying to get away from the trapped velociraptors and other people trying to get out of the building - as such, they need to be reprogrammed.
 
-Each bank of the elevators are controlled by a different microcontroller, and elevator engineers have asked you to program one of them, and another colleague to program the other. They figured one of your algorithms will be efficient enough to get everyone where they want on time!
+Each bank of the elevators are controlled by a different micro-controller, and elevator engineers have asked you to program one of them, and another colleague to program the other. They figured one of your algorithms will be efficient enough to get everyone where they want on time!
 
 \section*{Game Information}
 You get to control two elevators that go up and down the twelve floors. You know what floor people are on and find out what floor they are trying to get to once they enter your elevator. Each turn consists of either moving an elevator up a floor, down a floor, or allowing people to get on or off (people will get on and off in the same turn). If an elevator from both banks opens on the same floor, the group will go for the elevator with fewer people, until the elevator's capacity is met, then people will go into a different elevator.
@@ -34,7 +34,7 @@ For any issues, please create an issue on our GitHub page (https://github.com/eo
 
 \section*{Setting it up}
 \begin{enumerate}
-\item If you're familiar with git: \verb|git clone http://github.com/eonarheim/BellTowerEscape| otherwise head over to http://github.com/eonarheim/BellTowerEscape and click on `Download Zip' from the righ side of the menu.
+\item If you're familiar with git: \verb|git clone http://github.com/eonarheim/BellTowerEscape| otherwise head over to http://github.com/eonarheim/BellTowerEscape and click on `Download Zip' from the right side of the menu.
 
 \includegraphics[width=6.5in]{1-DownloadZip.png}
 
@@ -42,7 +42,7 @@ For any issues, please create an issue on our GitHub page (https://github.com/eo
 
 \item Visual Studio will likely want to get some packages or update some things. Just kind of let it do its thing. If you need some help, reach out to someone in App Dev and they'll likely be more than happy to help out!
 
-\item Click on `BellTowerEscape' in the Solution Explorer and the little Play button to build it and use the little dropdown to launch it in your favorite browser. It might start doing a `Nuget Package Restore'. Again, just let Visual Studio do its thing.
+\item Click on `BellTowerEscape' in the Solution Explorer and the little Play button to build it and use the little drop-down to launch it in your favorite browser. It might start doing a `Nuget Package Restore'. Again, just let Visual Studio do its thing.
 
 \includegraphics[width=6.5in]{4-BuildIt.png}
 \newpage
@@ -50,15 +50,15 @@ For any issues, please create an issue on our GitHub page (https://github.com/eo
 
 \includegraphics[width=4.5in]{5-CSharp.png}
 
-\item SWEET! Now that you got it running, I'm sure you want to make some changes! Click the little dropdown next to `CSharpAgent' and open up `Agent.cs'. This file should be all you need to modify to create your own AI.
+\item SWEET! Now that you got it running, I'm sure you want to make some changes! Click the little drop-down next to `CSharpAgent' and open up `Agent.cs'. This file should be all you need to modify to create your own AI.
 
 \includegraphics[width=6.5in]{6-AgentCS.png}
 
-The code that's currently there is the default agent code that's equivalent to the one on the server. It's doing the Elevator Sweep Alogrithm similar to what most elevators use today. This algorithm could be improved upon or scrapped entirely for something new, but exists to show how to interact with game server and is the default agent that you will play against when testing your code.
+The code that's currently there is the default agent code that's equivalent to the one on the server. It's doing the Elevator Sweep Algorithm similar to what most elevators use today. This algorithm could be improved upon or scrapped entirely for something new, but exists to show how to interact with game server and is the default agent that you will play against when testing your code.
 
 \end{enumerate}
 
-\subsection*{The Elevator Sweep Alogrithm}
+\subsection*{The Elevator Sweep Algorithm}
 Each elevator is set to move up or down. As it goes in that direction, if there are other people to pick up who also want to go in that direction, those people are picked up! It then continues dropping people off until it reaches the highest/lowest floor, switches direction, and then continues. This is similar to how non-smart elevators work today.
 
 We've also provided a Lua and Python agent which can be found in the `Agents' folder of the solution and we have some READMEs there to help get you going on those!
