@@ -25,7 +25,6 @@ namespace BellTowerEscape.Controllers
         [Route("api/game")]
         public IList<Game> Get()
         {
-
             return _gameManager.Games.Values.Where(g => g.Running).ToList();
         }
 
@@ -45,8 +44,13 @@ namespace BellTowerEscape.Controllers
             }
             return null;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logon"></param>
+        /// <returns></returns>
         [HttpPost]
-        [Route("api/game/logonP1")]
+        [Route("api/game/logonPlayer1")]
         public LogonResult LogonP1(LogonP1Command logon)
         {
             if (IsValidLogonRequest(logon))
@@ -57,7 +61,7 @@ namespace BellTowerEscape.Controllers
         }
 
         [HttpPost]
-        [Route("api/game/logonP2")]
+        [Route("api/game/logonPlayer2")]
         public LogonResult LogonP2(LogonP2Command logon)
         {
             if (IsValidP2LogonRequest(logon))
