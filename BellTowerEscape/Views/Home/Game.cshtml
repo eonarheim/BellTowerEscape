@@ -28,27 +28,228 @@
 
         var elevatorHub = $.connection.elevatorHub;
         var initialized = false;
+        var game = null;
         var gameId = @Model;
+        var currentTurn = 0;
+        var currentTurnLabel = new ex.Label(currentTurn, 15, 50, "40pt Segoe UI");
+        currentTurnLabel.onInitialize = function() {
+            currentTurnLabel.color = ex.Color.Gray.lighten(.90);
+        };
+
+        var playerLabels = [];
+        var scoreLabels = [];
+
+        currentTurnLabel.color = ex.Color.Black;
+        var elevatorWidth = 60;
+        var elevatorSpacing = 5;
+        var floorHeight = 50;
+        var buildingWidth = 450;
+        var numberElevators = 4;
+        var numberFloors = 12;
+        var floorSpacing = 2;
+        var meepleWidth = 10;
+
+        var elevators = [];
+        var floors = [];
 
         $("#kill").on('click', function() {
-            $.post("@Url.Action("KillGame","Home")", {id: gameId});
+            $.post("@Url.Action("KillGame", "Home")", { id: gameId });
         });
 
-        elevatorHub.client.update = function(game) {
-            console.log("Received game update", game);
-            // todo update game visualization
-            console.log(game);
+        var Floor = ex.Actor.extend({
+            constructor: function(x, y, width, height, color) {
+                ex.Actor.apply(this, [x, y, width, height, color]);
+                this.floorLabel = new ex.Label(0, 0, 0, "40pt Segoe UI");
+                this.floorLabel.color = this.color.darken(.20);
+                this.floorLabel.textAlign = ex.TextAlign.Center;
 
-            $("#turn").text(game.Turn);
+            },
+            draw: function(ctx, delta) {
+                ex.Actor.prototype.draw.apply(this, [ctx, delta]);
+
+                var point = this.getCenter();
+                this.floorLabel.text = this.number;
+                this.floorLabel.x = point.x;
+                this.floorLabel.y = point.y + floorHeight / 3;
+                this.floorLabel.draw(ctx, delta);
+                if (this.meeple) {
+                    var totalMeepleWidth = this.meeple.length * (meepleWidth + 2);
+                    for (var i = 0; i < this.meeple.length; i++) {
+                        ctx.fillStyle = ex.Color.Black.toString();
+                        ctx.fillRect(point.x + i * (meepleWidth + 2) - totalMeepleWidth / 2, point.y, meepleWidth, 20);
+                        ctx.fillStyle = ex.Color.White.toString();
+                        ctx.textAlign = "center";
+                        ctx.font = "10pt Segoe UI";
+                        ctx.fillText(this.meeple[i].Destination, point.x + i * (meepleWidth + 2) - totalMeepleWidth / 2 + meepleWidth / 2, point.y + 27 / 2, meepleWidth);
+                    }
+                }
+            }
+        });
+
+        var Elevator = ex.Actor.extend({
+            constructor: function(x, y, width, height, color) {
+                ex.Actor.apply(this, [x, y, width, height, color]);
+            },
+            draw: function(ctx, delta) {
+                ex.Actor.prototype.draw.apply(this, [ctx, delta]);
+                var point = this.getCenter();
+                if (this.meeple) {
+                    var totalMeepleWidth = this.meeple.length * (meepleWidth + 2);
+                    for (var i = 0; i < this.meeple.length; i++) {
+                        ctx.fillStyle = ex.Color.Black.toString();
+                        ctx.fillRect(point.x + i * (meepleWidth + 2) - totalMeepleWidth / 2, point.y, meepleWidth, 20);
+                        ctx.fillStyle = ex.Color.White.toString();
+                        ctx.textAlign = "center";
+                        ctx.font = "10pt Segoe UI";
+                        ctx.fillText(this.meeple[i].Destination, point.x + i * (meepleWidth + 2) - totalMeepleWidth / 2 + meepleWidth / 2, point.y + 27 / 2, meepleWidth);
+                    }
+                }
+            }
+        });
+
+
+        elevatorHub.client.update = function(gameStatus) {
+            if (!initialized) {
+
+
+                initialized = true;
+            }
+
+
+            if (game && initialized) {
+                console.log(gameStatus);
+                currentTurn = gameStatus.Turn;
+                currentTurnLabel.text = currentTurn;
+
+                for (var key in gameStatus.Players) {
+                    if (gameStatus.Players[key].AuthToken === gameStatus.Elevators[0].PlayerToken) {
+                        playerLabels[0].text = key;
+                        scoreLabels[0].text = gameStatus.Players[key].Score;
+                    }
+
+                    if (gameStatus.Players[key].AuthToken === gameStatus.Elevators[3].PlayerToken) {
+                        playerLabels[1].text = key;
+                        scoreLabels[1].text = gameStatus.Players[key].Score;
+                    }
+                }
+
+                for (var i in gameStatus.Elevators) {
+                    elevators[i].floor = gameStatus.Elevators[i].Floor;
+                    elevators[i].easeTo(elevators[i].x, -gameStatus.Elevators[i].Floor * (floorHeight + floorSpacing) + game.height - 100 - 10, 1500, ex.EasingFunctions.EaseInOutCubic);
+                    elevators[i].meeple = gameStatus.Elevators[i].Meeples;
+
+                }
+
+                for (var i in gameStatus.Floors) {
+                    (function(i) {
+                        floors[i].meeple = gameStatus.Floors[i].Meeples;
+                    })(i);
+                }
+
+            }
+
+
+            $("#turn").text(gameStatus.Turn);
+            $("#status").text(gameStatus.GameOver ? "Game Over!" : "Running");
         };
 
         $.connection.hub.start().done(function() {
             console.log("Connected to ElevatorHub");
-            var game = new ex.Engine({ canvasElementId: 'game', width: 600, height: 400 });
+            game = new ex.Engine({ canvasElementId: 'game', width: 800, height: 800 });
+            game.backgroundColor = ex.Color.Azure;
             var loader = new ex.Loader();
+            game.on('visible', function() {
+                console.log("visible");
+                // clear actions and snap
+                for (var i = 0; i < elevators.length; i++) {
+                    elevators[i].clearActions();
+                    elevators[i].easeTo(elevators[i].x, -elevators[i].floor * (floorHeight + floorSpacing) + game.height - 100 - 10, 1500, ex.EasingFunctions.EaseInOutCubic);
+                }
+
+            });
+
             game.start(loader).then(function() {
                 console.log("Excalibur loaded");
+                var building = new ex.Actor(game.width / 2, game.height - 100, buildingWidth, floorHeight * 12 + 40, ex.Color.Gray);
+
+                building.anchor.setTo(.5, 1.0);
+
+
+                var darkGreen = ex.Color.Green.clone();
+                darkGreen = darkGreen.darken(.20);
+
+                // initialize elevators and floors on first update
+                var lightGray = ex.Color.Gray.clone().lighten(.50);
+
+                var ground = new ex.Actor(0, game.height - 100, game.width, game.height, darkGreen);
+                ground.anchor.setTo(0, 0);
+
+
+                for (var i = 0; i < numberElevators; i++) {
+                    (function(i) {
+                        if (i < numberElevators / 2) {
+                            var elevatorActor = new Elevator(game.width / 2 - buildingWidth / 2 + 10 + i * (elevatorWidth + elevatorSpacing), game.height - 100 - 10, elevatorWidth, floorHeight, ex.Color.Blue.lighten(.50));
+                        } else {
+                            var elevatorActor = new Elevator(game.width / 2 + buildingWidth / 2 - i * (elevatorWidth + elevatorSpacing) + elevatorWidth, game.height - 100 - 10, elevatorWidth, floorHeight, ex.Color.Red.lighten(.50));
+                        }
+
+
+                        elevatorActor.anchor.setTo(0, 1.0);
+                        elevators.push(elevatorActor);
+                        game.add(elevatorActor);
+                        elevatorActor.setZIndex(1);
+                    })(i);
+                };
+
+                for (var i = 0; i < numberFloors; i++) {
+                    (function(i) {
+                        var floor = new Floor(game.width / 2, game.height - 100 - 10 - i * (floorHeight + floorSpacing), 30 * 5, floorHeight, lightGray);
+
+                        floor.number = i;
+                        floor.anchor.setTo(.5, 1.0);
+                        floors.push(floor);
+
+                        game.add(floor);
+                        floor.setZIndex(1);
+                    })(i);
+                }
+
+
+                var label1 = new ex.Label("Player 1", 100, game.height - 20, "20pt Segoe UI");
+                label1.textAlign = ex.TextAlign.Center;
+                var label2 = new ex.Label("Player 2", game.width - 100, game.height - 20, "20pt Segoe UI");
+                label2.textAlign = ex.TextAlign.Center;
+                playerLabels.push(label1);
+                playerLabels.push(label2);
+                game.add(label1);
+                game.add(label2);
+                label1.setZIndex(100);
+                label2.setZIndex(100);
+
+                var score1 = new ex.Label("0", 100, game.height - 45, "40pt Segoe UI");
+                score1.onInitialize = function() {
+                    score1.color = ex.Color.Blue.lighten(.20);
+                }
+                score1.textAlign = ex.TextAlign.Center;
+                var score2 = new ex.Label("0", game.width - 100, game.height - 45, "40pt Segoe UI");
+                score2.onInitialize = function() {
+                    score2.color = ex.Color.Red.lighten(.20);
+                }
+                score2.textAlign = ex.TextAlign.Center;
+                scoreLabels.push(score1);
+                scoreLabels.push(score2);
+
+                game.add(score1);
+                game.add(score2);
+                score1.setZIndex(100);
+                score2.setZIndex(100);
+
+                game.add(ground);
+                game.add(building);
+                game.add(currentTurnLabel);
+
             });
+
 
             // subscribe to game updates
             elevatorHub.server.listen(@Model);

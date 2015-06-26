@@ -27,7 +27,7 @@ namespace BellTowerEscape.Server
         private static double _LIKELIHOOD_PEOPLE_ARE_ADDED = 1 / Convert.ToDouble(NUMBER_OF_FLOORS); // percent chance that people are even added.
 
         private HighFrequencyTimer _gameLoop = null;
-        private ConcurrentDictionary<string, Player> _players = new ConcurrentDictionary<string, Player>();
+        public ConcurrentDictionary<string, Player> Players = new ConcurrentDictionary<string, Player>();
         private ConcurrentDictionary<string, Player> _authTokens = new ConcurrentDictionary<string, Player>(); 
         
 
@@ -116,7 +116,7 @@ namespace BellTowerEscape.Server
         public LogonResult LogonPlayer(string playerName)
         {
             var result = new LogonResult();
-            if (!_players.ContainsKey(playerName))
+            if (!Players.ContainsKey(playerName))
             {
                 var newPlayer = new Player()
                 {
@@ -124,7 +124,7 @@ namespace BellTowerEscape.Server
                     PlayerName = playerName
                 };
 
-                var success = _players.TryAdd(playerName, newPlayer);
+                var success = Players.TryAdd(playerName, newPlayer);
                 var success2 = _authTokens.TryAdd(newPlayer.AuthToken, newPlayer);
 
                 if (success && success2)
@@ -207,7 +207,7 @@ namespace BellTowerEscape.Server
                 if (this.Waiting) {
                     status = "Other players never joined";
                 }
-                else if (this._authTokens.Values.GroupBy(e => e.Score).First().Count() == this._players.Count())
+                else if (this._authTokens.Values.GroupBy(e => e.Score).First().Count() == this.Players.Count())
                 {
                     status = "Game Over - It's a TIE!";
                 }

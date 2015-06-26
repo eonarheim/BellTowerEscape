@@ -18,7 +18,10 @@ namespace BellTowerEscape.Server
 
         private GameManager()
         {
-            Games = new Dictionary<int, Game>();
+            if (Games == null)
+            {
+                Games = new Dictionary<int, Game>();
+            }
         }
 
         public Game GetNewGame()
