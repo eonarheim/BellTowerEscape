@@ -18,7 +18,8 @@ namespace BellTowerEscape.Server
         public static int START_DELAY = 5000; // 5 seconds
         public static int TURN_DURATION = 2000; // 2 seconds
         public static int SERVER_PROCESSING = 2000; // 2 seconds
-        public static int MAX_TURN = 5;
+        public static int TIME_TO_WAIT_FOR_SECOND_PLAYER = 60000; // 1 minute
+        public static int MAX_TURN = 500;
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
@@ -37,11 +38,13 @@ namespace BellTowerEscape.Server
         public int Turn { get; set; }
         public bool GameOver { get; set; }
         private bool _started { get; set; }
+        public bool Waiting { get; set; }
 
         public bool _processingComplete { get; set; }
 
         private object synclock = new object();
 
+        private long elapsedWaitTime = 0;
         private long elapsedTotalTurn = 0;
         private long elapsedServerTime = 0;
         private long gameStartCountdown = START_DELAY;
@@ -189,9 +192,22 @@ namespace BellTowerEscape.Server
         {
             var status = "Initializing";
 
+            if (!this._started)
+            {
+                status = "Game waiting for Logons";
+            }
+
+            if (this.Waiting)
+            {
+                status = "Waiting for another player to join...";
+            }
+
             if (this.GameOver)
             {
-                if (this._authTokens.Values.GroupBy(e => e.Score).First().Count() == this._players.Count())
+                if (this.Waiting) {
+                    status = "Other players never joined";
+                }
+                else if (this._authTokens.Values.GroupBy(e => e.Score).First().Count() == this._players.Count())
                 {
                     status = "Game Over - It's a TIE!";
                 }
@@ -207,19 +223,14 @@ namespace BellTowerEscape.Server
                 status = "Game Running";
             }
 
-            if (!this._started)
-            {
-                status = "Game waiting for Logons";
-            }
-
             return new StatusResult()
             {
                 EnemyElevators = GetElevatorsForOtherPlayer(command.AuthToken),
                 MyElevators = GetElevatorsForPlayer(command.AuthToken),
                 TimeUntilNextTurn = (int) (_started ?  
-                    (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime) : this.gameStartCountdown),
+                    (SERVER_PROCESSING + TURN_DURATION - this.elapsedTotalTurn - this.elapsedServerTime) : Waiting ? SERVER_PROCESSING + TURN_DURATION : this.gameStartCountdown),
                 Delivered = _authTokens[command.AuthToken].Score,
-                EnemyDelivered = GetEnemyDelivered(command.AuthToken),
+                EnemyDelivered = this.Waiting ? 0 : GetEnemyDelivered(command.AuthToken),
                 Floors = Floors.Values.Select(Mapper.Map<FloorLite>).ToList(),
                 Id = this.Id,
                 Turn = this.Turn,
@@ -339,6 +350,17 @@ namespace BellTowerEscape.Server
 
         public void Update(long delta)
         {
+            if (this.Waiting)
+            {
+                elapsedWaitTime += delta;
+                if (elapsedWaitTime > TIME_TO_WAIT_FOR_SECOND_PLAYER)
+                {
+                    GameOver = true;
+                    this.Stop();
+                }
+                return;
+            }
+
             if (!_started)
             {
                 this.gameStartCountdown -= delta;

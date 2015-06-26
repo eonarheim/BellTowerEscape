@@ -33,7 +33,6 @@ namespace BellTowerEscape.Server
         [RecordCommand]
         public MoveResult Execute(MoveCommand command)
         {
-            
             // TODO Validate Command authToken
             var game = Games[command.GameId];
             
@@ -59,6 +58,8 @@ namespace BellTowerEscape.Server
         public LogonResult Execute(LogonP1Command command)
         {
             var game = GetNewGame();
+            game.Waiting = true;
+            game.Start();
             return game.LogonPlayer(command.AgentName);
         }
 
@@ -68,8 +69,7 @@ namespace BellTowerEscape.Server
         {
             var game = Games[command.GameId];
             var result = game.LogonPlayer(command.AgentName);
-            game.Start();
-
+            game.Waiting = false;
             return result;
         }
 
