@@ -68,8 +68,12 @@ namespace BellTowerEscape.Server
         public LogonResult Execute(LogonP2Command command)
         {
             var game = Games[command.GameId];
-            var result = game.LogonPlayer(command.AgentName);
-            game.Waiting = false;
+            LogonResult result = null;
+            if (game.Waiting)
+            {
+                result = game.LogonPlayer(command.AgentName);
+                game.Waiting = false;
+            }
             return result;
         }
 
