@@ -9,8 +9,6 @@
 
 \begin{document}
 
-
-
 \centerline{\sc \large Code Camp Challenge v5.0}
 \vspace{.5pc}
 \centerline{\sc Bell Tower Escape!}
@@ -26,12 +24,10 @@ You get to control two elevators that go up and down the twelve floors. You know
 
 The game is turn based with 500 turns and the person who has `delivered' the most amount of people in that time is declared the winner. When people get on your elevator, they will have a `patience' value that starts at $$abs(destFloor-currentFloor) * frustrationCoefficient + 3$$ where $frustrationCoefficient = 2$. This value decreases by 1 every turn and if it's negative the Meeple will get off at the next elevator stop and count negatively towards the number of people delivered.
 
-\section*{Submission}
-To submit your AI, place a folder with your name on it in \verb|\\genmills.com\corportate\PUBLIC\codecamp| by midnight on Monday July 20th. You are allowed to program in any language that you choose (we have provided a Python, CSharp, and Lua agent). We ask that you submit a working Windows binary with the endpoint set to http://localhost:3193/, along with your source code and any special build/run instructions (especially if you created a custom agent).
+\section*{THE COMPETITION}
+Once we've gathered all the submissions we'll pit them against one another and determine who has the best AI of them all!
 
-\section*{Issues}
-For any issues with the code, please create an issue on our GitHub page (https://github.com/eonarheim/BellTowerEscape). If you have any questions feel free to reach out to Erik Onarheim or Shakil Thakur, as they will rather enthusiastically discuss anything.
-
+\newpage
 \section*{Setting it up locally}
 \begin{enumerate}
 \item If you're familiar with git: \verb|git clone http://github.com/eonarheim/BellTowerEscape| otherwise head over to http://github.com/eonarheim/BellTowerEscape and click on `Download Zip' from the right side of the menu.
@@ -57,21 +53,27 @@ For any issues with the code, please create an issue on our GitHub page (https:/
 \end{enumerate}
 
 \section*{Setting it up against Azure}
-For people who just want to jump right in and not worry about server stuff, we also have BellTowerEscape running in the cloud! The key thing here is to change the endpoint location from \verb|http://localhost:3193/| to \verb|.azurewebsites.net/|. This can be done in `Program.cs' for the CSharp agent, at the bottom of `PLAY.lua' for the Lua version, and near the bottom of `SampleAgent.py' for the Python agent. Also, for the CSharp agent, it'll likely be beneficial to make the CSharpAgent the main project by right-clicking and choosing `Set as Startup Project', so when you build the solution, it wont try to build and run the server code! 
+For people who just want to jump right in and not worry about server stuff, we also have BellTowerEscape running in the cloud! The key thing here is to change the endpoint location from \verb|http://localhost:3193/| to \verb|http://elevators.azurewebsites.net/|. This can be done in `Program.cs' for the CSharp agent, at the bottom of `PLAY.lua' for the Lua version, and near the bottom of `SampleAgent.py' for the Python agent. Also, for the CSharp agent, it'll likely be beneficial to make the CSharpAgent the main project by right-clicking and choosing `Set as Startup Project', so when you build the solution, it wont try to build and run the server code! 
 
 \includegraphics[width=3.5in]{set-as-startup.png}
 
 \section*{Pitting two AI's against each other}
 By default, whenever you connect to the game, it'll start playing against the demo agent that uses the Elevator Sweep Alogrithm (described in detail below). However, if you want to pit one of your AIs against another one - without having to modify the server code - it can be done! If you change the logon command from \verb|/api/game/logon| to \verb|/api/game/logonPlayer1|, the server will wait up to a minute for the \verb|/api/game/logonPlayer2| command to be executed and then the game will start (if it never receives it, it'll kill the game). \verb|logonPlayer2| requires you send in the \verb|authToken| and \verb|GameId| that was returned from \verb|logonPlayer1| to start the game. If you need any help with this feel free to reach out to Erik or Shakil.
 
+\section*{Visuals}
+You can also watch your game happen in realtime! If you are running locally, a web browser window should open up when you click the little play button and you can click on your GameId on the main screen to watch your elevators go! If you're running it against Azure, just head over to http://elevators.azurewebsites.net and click on your GameId there!
+
 \newpage
 \section*{The Elevator Sweep Algorithm}
 This is the current algorithm that is used in all the sample agents as well as the default one that runs on the server. Each elevator is set to move up or down. As it goes in that direction, if there are other people to pick up who also want to go in that direction, those people are picked up! It then continues dropping people off until it reaches the highest/lowest floor, switches direction, and then continues. This is similar to how non-smart elevators work today.
 
 \section*{The API}
-The API can be found here: http://.azurewebsites.net. However, if you're using one of our Agents as a base, you likely don't need to worry about it and if you're creating your own agent, it might be a little easier to base it off a pre-existing one!
+The API can be found here: http://elevators.azurewebsites.net/Help. However, if you're using one of our Agents as a base, you likely don't need to worry about it and if you're creating your own agent, it might be a little easier to base it off a pre-existing one!
 
-\section*{THE COMPETITION}
-Once we've gathered all the submissions we'll pit them against one another and determine who has the best AI of them all!
+\section*{Issues}
+For any issues with the code, please create an issue on our GitHub page (https://github.com/eonarheim/BellTowerEscape). If you have any questions feel free to reach out to Erik Onarheim or Shakil Thakur, as they will rather enthusiastically discuss anything.
+
+\section*{Submission}
+To submit your AI, place a folder with your name on it in \verb|\\genmills.com\corportate\PUBLIC\codecampv5| by midnight on Monday July 20th. You are allowed to program in any language that you choose (we have provided a Python, CSharp, and Lua agent). We ask that you submit a working Windows binary with the endpoint set to http://localhost:3193/, along with your source code and any special build/run instructions (especially if you created a custom agent).
 
 \end{document}
