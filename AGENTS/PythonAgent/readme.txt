@@ -22,3 +22,4 @@ Requirements:
  * To Run type "python SampleAgent.py" at the command line
 
 
+--Based on the magnificent work of Andrew Nguyen
