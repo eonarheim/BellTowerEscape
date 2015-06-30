@@ -18,6 +18,7 @@ namespace BellTowerEscape.Server
         public static int START_DELAY = 5000; // 5 seconds
         public static int TURN_DURATION = 2000; // 2 seconds
         public static int SERVER_PROCESSING = 2000; // 2 seconds
+        public int totalTimeProcessing = TURN_DURATION + SERVER_PROCESSING;
         public static int TIME_TO_WAIT_FOR_SECOND_PLAYER = 60000; // 1 minute
         public static int MAX_TURN = 500;
         public static bool IsRunningLocally = HttpContext.Current.Request.IsLocal;
@@ -452,7 +453,7 @@ namespace BellTowerEscape.Server
                     // ensure "fairness" by shuffling
                     elevatorsStoppedOnFloor.Shuffle(this);
                     // sort ascnedingly
-                    elevatorsStoppedOnFloor.OrderByDescending(e => e.FreeSpace);
+                    elevatorsStoppedOnFloor = elevatorsStoppedOnFloor.OrderByDescending(e => e.FreeSpace).ToList();
                     
                     // add the meeples on the floor until capacity is met. Pop and continue with next elevator
                     foreach (Elevator elevator in elevatorsStoppedOnFloor)

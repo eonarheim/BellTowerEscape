@@ -96,7 +96,11 @@
                 if (this.meeple) {
                     var totalMeepleWidth = this.meeple.length * (meepleWidth + 2);
                     for (var i = 0; i < this.meeple.length; i++) {
-                        ctx.fillStyle = ex.Color.Black.toString();
+                        if (this.meeple[i].Patience < 0) {
+                            ctx.fillStyle = ex.Color.Red.toString();
+                        } else {
+                            ctx.fillStyle = ex.Color.Black.toString();
+                        }
                         ctx.fillRect(point.x + i * (meepleWidth + 2) - totalMeepleWidth / 2, point.y, meepleWidth, 20);
                         ctx.fillStyle = ex.Color.White.toString();
                         ctx.textAlign = "center";
@@ -135,7 +139,7 @@
 
                 for (var i in gameStatus.Elevators) {
                     elevators[i].floor = gameStatus.Elevators[i].Floor;
-                    elevators[i].easeTo(elevators[i].x, -gameStatus.Elevators[i].Floor * (floorHeight + floorSpacing) + game.height - 100 - 10, 1500, ex.EasingFunctions.EaseInOutCubic);
+                    elevators[i].easeTo(elevators[i].x, -gameStatus.Elevators[i].Floor * (floorHeight + floorSpacing) + game.height - 100 - 10, (gameStatus.totalTimeProcessing)/2, ex.EasingFunctions.EaseInOutCubic);
                     elevators[i].meeple = gameStatus.Elevators[i].Meeples;
 
                 }
