@@ -12,7 +12,7 @@ namespace CSharpAgent
         private enum Direction { Up, Down, Stop } ;
         private Dictionary<int, Direction> elevatorStatus = new Dictionary<int, Direction>();
 
-        public Agent(string name, string endpoint = "http://localhost:3193/") 
+        public Agent(string name, string endpoint) 
             : base(name, endpoint)
         {
         }

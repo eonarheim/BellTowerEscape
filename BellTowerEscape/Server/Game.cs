@@ -20,6 +20,7 @@ namespace BellTowerEscape.Server
         public static int SERVER_PROCESSING = 2000; // 2 seconds
         public static int TIME_TO_WAIT_FOR_SECOND_PLAYER = 60000; // 1 minute
         public static int MAX_TURN = 500;
+        public static bool IsRunningLocally = HttpContext.Current.Request.IsLocal;
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
@@ -151,7 +152,15 @@ namespace BellTowerEscape.Server
         {
             var agentTask = Task.Factory.StartNew(() =>
             {
-                AgentBase sweetDemoAgent = new AgentBase(playerName, "http://localhost:3193");
+                string endpoint = "";
+                if (IsRunningLocally)
+                {
+                    endpoint = "http://localhost:3193";
+                }
+                else {
+                    endpoint = "http://elevators.azurewebsites.net";
+                }
+                AgentBase sweetDemoAgent = new AgentBase(playerName, endpoint);
                 sweetDemoAgent.Start(demoResult).Wait();
             });
         }
