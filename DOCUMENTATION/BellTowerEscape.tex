@@ -70,6 +70,16 @@ This is the current algorithm that is used in all the sample agents as well as t
 \section*{The API}
 The API can be found here: http://elevators.azurewebsites.net/Help. However, if you're using one of our Agents as a base, you likely don't need to worry about it and if you're creating your own agent, it might be a little easier to base it off a pre-existing one!
 
+\section*{Troubleshooting Steps}
+If your Package Restore is disabled, the following steps should help you build the solution:
+\begin{enumerate}
+	\item Tools $\to$ Nuget Package Manager $\to$ Manage packages for solution $\to$ Updates $\to$ click the ‘Update All’ button
+	\item Restart Visual Studio
+	\item In package manager Console execute: `Update-Package –reinstall Newtonsoft.Json'
+	\item Rebuild Solution
+	\item Try running it!
+\end{enumerate}
+
 \section*{Issues}
 For any issues with the code, please create an issue on our GitHub page (https://github.com/eonarheim/BellTowerEscape). If you have any questions feel free to reach out to Erik Onarheim or Shakil Thakur, as they will rather enthusiastically discuss anything.
 
