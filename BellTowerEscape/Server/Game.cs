@@ -407,6 +407,65 @@ namespace BellTowerEscape.Server
 
             if (Processing && !_processingComplete)
             {
+                // score meeples
+                foreach (var elevator in Elevators.Values.ToList())
+                {
+                    foreach (var meeple in elevator.Meeples.ToList())
+                    {
+                        if (elevator.Floor == meeple.Destination && elevator.IsStopped)
+                        {
+                            if (meeple.Patience >= 0)
+                            {
+                                elevator.Meeples.Remove(meeple);
+                                _authTokens[elevator.PlayerToken].Score++;
+                            }
+                        }
+                    }
+                }
+
+                // for each floor
+                for (int i = 0; i < Floors.Count; i++)
+                {
+                    // let's just not bother when there are no meeples
+                    if (Floors[i].Meeples.Count <= 0) { continue; }
+
+                    // get all stopped elevators based on capacity
+                    List<Elevator> elevatorsStoppedOnFloor = Elevators.Values.Where(e => e.IsStopped && e.Floor == i).ToList();
+                    // ensure "fairness" by shuffling
+                    elevatorsStoppedOnFloor.Shuffle(this);
+                    // sort ascnedingly
+                    elevatorsStoppedOnFloor = elevatorsStoppedOnFloor.OrderByDescending(e => e.FreeSpace).ToList();
+                    var elevatorGroups = elevatorsStoppedOnFloor.GroupBy(e => e.FreeSpace);
+
+                    // each group should have the same amount of free space
+                    foreach (var eGroup in elevatorGroups)
+                    {
+                        // SHUFFLE IT AGAIN!
+                        var eGroupShuffled = eGroup.ToList();
+                        eGroupShuffled.Shuffle(this);
+                        
+                        // just kill it, then again max of 4 elevators, possibly not worth it. BUT bell tower is expandable!
+                        if (Floors[i].Meeples.Count <= 0) { break; }
+
+                        // keep going for the amount of free space in the elevator
+                        for (int j = eGroup.Key; j > 0; j--)
+                        {
+                            // add 1 meeple to the elevator at a time
+                            foreach (Elevator elevator in eGroupShuffled)
+                            {
+                                if (Floors[i].Meeples.Count > 0 && elevator.FreeSpace > 0)
+                                {
+                                    Meeple meeple = Floors[i].Meeples[0];
+                                    Floors[i].Meeples.Remove(meeple);
+                                    elevator.Meeples.Add(meeple);
+                                    meeple.InElevator = true;
+                                }
+                            }
+                        }
+
+                    }
+                }
+
                 // for each elevator check Meeple frustration
                 foreach (var elevator in Elevators.Values.ToList())
                 {
@@ -424,47 +483,11 @@ namespace BellTowerEscape.Server
                                 Floors.TryGetValue(elevator.Floor, out floor);
                                 meeple.ResetMeeple(elevator.Floor);
                                 floor.Meeples.Add(meeple);
+                                _authTokens[elevator.PlayerToken].Score--;
                             }
                             elevator.Meeples.Remove(meeple);
-                            _authTokens[elevator.PlayerToken].Score--;
                         }
 
-                    }
-                }
-
-                // score meeples
-                foreach (var elevator in Elevators.Values.ToList())
-                {
-                    foreach (var meeple in elevator.Meeples.ToList())
-                    {
-                        if (elevator.Floor == meeple.Destination && elevator.IsStopped)
-                        {
-                            elevator.Meeples.Remove(meeple);
-                            _authTokens[elevator.PlayerToken].Score++;
-                        }
-                    }
-                }
-
-                // for each floor
-                for (int i = 0; i < Floors.Count; i++)
-                {
-                    // get all stopped elevators based on capacity
-                    List<Elevator> elevatorsStoppedOnFloor = Elevators.Values.Where(e => e.IsStopped && e.Floor == i).ToList();
-                    // ensure "fairness" by shuffling
-                    elevatorsStoppedOnFloor.Shuffle(this);
-                    // sort ascnedingly
-                    elevatorsStoppedOnFloor = elevatorsStoppedOnFloor.OrderByDescending(e => e.FreeSpace).ToList();
-                    
-                    // add the meeples on the floor until capacity is met. Pop and continue with next elevator
-                    foreach (Elevator elevator in elevatorsStoppedOnFloor)
-                    {
-                        while (Floors[i].Meeples.Count > 0 && elevator.FreeSpace > 0)
-                        {
-                            Meeple meeple = Floors[i].Meeples[0];
-                            Floors[i].Meeples.Remove(meeple);
-                            elevator.Meeples.Add(meeple);
-                            meeple.InElevator = true;
-                        }
                     }
                 }
 
@@ -474,6 +497,7 @@ namespace BellTowerEscape.Server
                 // clear state variables
                 foreach (var elevator in Elevators.Values)
                 {
+                    elevator.IsStopped = false; //so, if your AI skips a turn, you can't fake a "stopped" elevator ploy
                     elevator.Done = false;
                 }
 

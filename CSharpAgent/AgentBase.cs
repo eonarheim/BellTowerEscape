@@ -67,9 +67,10 @@ namespace CSharpAgent
             var results = new List<MoveResult>();
             foreach (var moveCommand in moveCommands)
             {
-                Console.WriteLine(string.Format("posting move {0} for elevator {1}", moveCommand.Direction, moveCommand.ElevatorId));
+                // Console.WriteLine(string.Format("posting move {0} for elevator {1}", moveCommand.Direction, moveCommand.ElevatorId));
                 var response = await _client.PostAsJsonAsync("api/game/move", moveCommand);
                 var result = await response.Content.ReadAsAsync<MoveResult>();
+                Console.WriteLine(result.Message);
                 results.Add(result);
             }
             
