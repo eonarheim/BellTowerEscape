@@ -25,8 +25,7 @@ namespace BellTowerEscape.Server
 
         private static int _NUMBER_OF_ELEVATORS = 4;
         public static int NUMBER_OF_FLOORS = 12;
-        private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 2; // this may need to be reworked
-        private static double _LIKELIHOOD_PEOPLE_ARE_ADDED = 1 / Convert.ToDouble(NUMBER_OF_FLOORS); // percent chance that people are even added.
+        private static int _MAX_PEOPLE_TO_ADD_PER_FLOOR = 2;
 
         private HighFrequencyTimer _gameLoop = null;
         public ConcurrentDictionary<string, Player> Players = new ConcurrentDictionary<string, Player>();
@@ -80,9 +79,12 @@ namespace BellTowerEscape.Server
             Id = _MAXID++;
             
             Elevators = new ConcurrentDictionary<int, Elevator>();
+            // dirty filthy hacks
+            var evenElevators = Random.Next(NUMBER_OF_FLOORS);
+            var oddElevators = Random.Next(NUMBER_OF_FLOORS);
             for (int i = 0; i < _NUMBER_OF_ELEVATORS; i++)
             {
-                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = Random.Next(NUMBER_OF_FLOORS-1), Meeples = new List<Meeple>()});
+                Elevators.GetOrAdd(i, new Elevator(){Id = i, Floor = (i % 2 == 0) ? evenElevators : oddElevators, Meeples = new List<Meeple>()});
             }
             Floors = new ConcurrentDictionary<int, Floor>();
 
@@ -101,13 +103,7 @@ namespace BellTowerEscape.Server
 
         private void AddMeepleToFloors()
         {
-            // gotta add some Meeples. This should spawn some meeps on floors.
-            for (int i = 0; i < NUMBER_OF_FLOORS; i++)
-            {
-                Floor thisFloor;
-                bool success = Floors.TryGetValue(i, out thisFloor);
-                if (success && Random.NextDouble() <= _LIKELIHOOD_PEOPLE_ARE_ADDED) { thisFloor.SpawnMeeple(this, Random.Next(_MAX_PEOPLE_TO_ADD_PER_FLOOR + 1)); };
-            }
+            Floors[Random.Next(NUMBER_OF_FLOORS)].SpawnMeeple(this, Random.Next(_MAX_PEOPLE_TO_ADD_PER_FLOOR));
         }
 
         /// <summary>
@@ -503,6 +499,8 @@ namespace BellTowerEscape.Server
 
                 _processingComplete = true;
             }
+
+
 
             if (Turn >= MAX_TURN)
             {
