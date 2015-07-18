@@ -436,9 +436,8 @@ namespace BellTowerEscape.Server
                     // each group should have the same amount of free space
                     foreach (var eGroup in elevatorGroups)
                     {
-                        // SHUFFLE IT AGAIN!
-                        var eGroupShuffled = eGroup.ToList();
-                        eGroupShuffled.Shuffle(this);
+                        // this created a more fair game. we ran some stats and it generates a mean meeple difference of like 4 with same algos
+                        var eGroupShuffled = eGroup.OrderBy(e => _authTokens[e.PlayerToken].Score).ToList();
                         
                         // just kill it, then again max of 4 elevators, possibly not worth it. BUT bell tower is expandable!
                         if (Floors[i].Meeples.Count <= 0) { break; }
